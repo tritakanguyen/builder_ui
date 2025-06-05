@@ -372,10 +372,10 @@
                         <option value="0206">α 2 1:3 0206</option>
                         <option value="0207">α 2 1:3 0207</option>
                         <option value="0208">α 2 1:3 0208</option>
-                        <option value="0303">β 2 1:1 0303</option>
-                        <option value="0306">β 2 1:3 0306</option>
-                        <option value="0307">β 2 1:3 0307</option>
-                        <option value="0308">β 2 1:3 0308</option>
+                        <option value="0303">β   1:1 0303</option>
+                        <option value="0306">β   1:3 0306</option>
+                        <option value="0307">β   1:3 0307</option>
+                        <option value="0308">β   1:3 0308</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -429,10 +429,10 @@
                         <option value="0206">α 2 1:3 0206</option>
                         <option value="0207">α 2 1:3 0207</option>
                         <option value="0208">α 2 1:3 0208</option>
-                        <option value="0303">β 2 1:1 0303</option>
-                        <option value="0306">β 2 1:3 0306</option>
-                        <option value="0307">β 2 1:3 0307</option>
-                        <option value="0308">β 2 1:3 0308</option>
+                        <option value="0303">β   1:1 0303</option>
+                        <option value="0306">β   1:3 0306</option>
+                        <option value="0307">β   1:3 0307</option>
+                        <option value="0308">β   1:3 0308</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -484,8 +484,8 @@
                         <option value="">Select Workcell ID</option>
                         <option value="0202">α 2 1:1 0202</option>
                         <option value="0205">α 2 1:3 0205</option>
-                        <option value="0302">β 2 1:1 0302</option>
-                        <option value="0305">β 2 1:3 0305</option>
+                        <option value="0302">β   1:1 0302</option>
+                        <option value="0305">β   1:3 0305</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -766,7 +766,7 @@ cd ../..`;
                 const stowSteps = `
                     <div class="step">${createStepHeader(1)}
                         <code id="stowStep1">cd
-brazil ws create --versionset VulcanReorientStow/deployment_artifacts --name workspace-${workspace} ${eventId}
+brazil ws create --versionset VulcanStowUnifiedDeploymentArtifacts/development --name workspace-${workspace} ${eventId}
 cd workspace-${workspace}
 brazil ws --use --platform AL2_x86_64
 brazil setup platform-support --force
@@ -843,7 +843,7 @@ cd ../..`;
                 const bufferSteps = `
                     <div class="step">${createStepHeader(1)}
                         <code id="bufferStep1">cd
-brazil ws create --versionset VulcanStowBuffer/deployment_artifacts --name workspace-${workspace} ${bufferEventId}
+brazil ws create --versionset VulcanStowUnifiedDeploymentArtifacts/development --name workspace-${workspace} ${bufferEventId}
 cd workspace-${workspace}
 brazil ws --use --platform AL2_x86_64
 brazil setup platform-support --force
