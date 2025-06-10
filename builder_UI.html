@@ -81,6 +81,17 @@
         button.update:hover {
             background-color: #777;
         }
+        button.download {
+            background-color: #007bff;
+            font-size: 12px;
+            margin: 0px;
+            padding: 4px;
+            vertical-align: center;
+        }
+        
+        button.download:hover {
+            background-color: #0056b3;
+        }
         code {
             display: block;
             padding: 10px;
@@ -196,7 +207,7 @@
         /* Troubleshooting Panel Styles */
         .troubleshoot-panel {
             position: fixed;
-            right: 0;
+            left: 0;
             top: 0;
             z-index: 1000;
             height: 100vh;
@@ -206,10 +217,9 @@
             background-color: #888;
             color: white;
             padding: 0;
-            right: 0px;
+            left: 0px;
             top: 10px;
             border: none;
-            /* border-radius: 4px 0 0 4px; */
             border-radius: 4px;
             width: 25px;
             height: 25px;
@@ -219,12 +229,11 @@
             align-items: center;
             justify-content: center;
             transition: background-color 0.3s;
-            /* margin-top: 20px; */
         }
 
         .close-troubleshoot {
             position: fixed;
-            right: 0px;
+            left: 0px;
             top: 0px;
             background-color: rgba(136, 136, 136, 0.4);
             color: white;
@@ -240,18 +249,14 @@
             padding: 0;
         }
 
-        .troubleshoot-btn:hover {
-            background-color: #777;
-        }
-
         .troubleshoot-content {
             position: fixed;
-            right: 0;
+            left: 0;
             top: 0;
             width: 16%;
             height: 100vh;
             background-color: white;
-            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
             padding: 10px;
             display: none;
             overflow-y: auto;
@@ -267,25 +272,9 @@
             margin-bottom: 15px;
         }
 
-        .troubleshoot-content p {
-            font-size: 14px;
-            margin: 8px 0;
-        }
-
-        .troubleshoot-content code {
-            font-size: 13px;
-            margin: 5px 0;
-        }
-
-        
-
-        .close-troubleshoot:hover {
-            background-color: #777;
-        }
-        
         .version-text {
             position: fixed;
-            right: 10px;
+            left: 10px;
             bottom: 10px;
             font-size: 8px;
             margin: 0;
@@ -305,13 +294,47 @@
             text-decoration: none;
         }
         .reset {
-            position: center;
+            position: fixed;
+            right: 10px;
+            bottom: 10px;
             font-size: 12px;
             background-color: #888;
-            
-            margin-top: 0px;
-            margin-bottom: 0px;
             border-radius: 100%;
+            z-index: 1001;
+            margin: 0;
+        }
+
+        /* Custom tooltip for checkboxes */
+        .checkbox-label {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .checkbox-label:hover .checkbox-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .checkbox-tooltip {
+            visibility: hidden;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: beige;
+            color: black;
+            text-align: center;
+            padding: 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 12px;
+            min-width: 200px;
+            max-width: 300px;
         }
     </style>
 </head>
@@ -324,7 +347,7 @@
             <br></br>
             <h4>Troubleshooting Guide</h4>
                 <p>Failed to run Brazil<br>
-                Likely to see at step 3,4 and 7. Solution: </p>
+                Likely to see at step 1. Solution: </p>
                 <code>toolbox install brazilcli</code>
                 <p>Failed to run Brazil after install Brazil<br>
                 Solution: run command below replace xxxxx with any number between 40000-60000</p>
@@ -333,11 +356,15 @@
                 Get &lt;CR hash&gt; at<code>code.amazon.com</code>
                 Then do<code>git rebase -i &lt;CR hash&gt;</code>
                 Press i key. Then replace "pick" with "drop" with the CR you want to drop. Escape when done with edit. Save & quit:<code>:wq</code></p>
+                <p>Auto custom builder tool section: 
+                <button id="downloadBtn" class="download" onclick="downloadConfig()" style="display: none; vertical-align: center;">⭳</button></p>
+                <p>Run command to open auto builder tool
+                <code>autobuild</code></p>
+                             
         </div>
     </div>
-
+    
     <div class="container">
-        <button id="resetBtn" class="reset" onclick="resetForm()">&#10227;</button>
         <h1>WorkSpace & Workflow Builder</h1>
         <div id="configForm">
             <!-- General Inputs -->
@@ -384,31 +411,49 @@
                 </div>
                 <div class="checkbox-container">
                     <div class="form-group">
-                        <label><input type="checkbox" id="stowMainline" onchange="toggleMainline()"> Mainline</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="stowMainline" onchange="toggleMainline()">
+                            <span>Mainline</span>
+                            <span class="checkbox-tooltip">Select this box if engineer tell you to build mainline</span>
+                        </label>
                     </div>
                     <div class="form-group">
-                        <label><input type="checkbox" id="stowImageTag" onchange="toggleInput('stowImageTagInput')"> Image Tag</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="stowImageTag" onchange="toggleInput('stowImageTagInput')">
+                            <span>Image Tag</span>
+                            <span class="checkbox-tooltip">Select if you have any image tag need to swap</span>
+                        </label>
                         <div id="stowImageTagInput" class="input-box">
                             <label for="stowImageTagValue">Enter Image Tag:</label>
                             <textarea id="stowImageTagValue" placeholder="Enter image tag"></textarea>
                         </div>
                     </div>
                     <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="checkbox" id="stowCherryPick" onchange="toggleCherryPickSection('stowCherryPickSection', 'stowAddBtn')"> Cherry Pick Packages
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="stowCherryPick" onchange="toggleCherryPickSection('stowCherryPickSection', 'stowAddBtn')">
+                            <span>Cherry Pick Packages</span>
+                            <span class="checkbox-tooltip">Select if you have any CR cherry pick</span>
                         </label>
                         <button id="stowAddBtn" style="display: none; background-color: #4CAF50; color: white; border: none; border-radius: 6px; padding: 0 10px; margin-top: 0px; margin-bottom: 5px; height: 24px; font-size: 12px; text-align: center; cursor: pointer;">Add Package</button>
                     </div>
                     <div id="stowCherryPickSection" style="display: none; margin-top: 10px;">
                         <div class="form-group">
-                            <label><input type="checkbox" id="stowVsConfigPick" onchange="toggleInput('stowVsConfigPickInput')"> Vulcan Config</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="stowVsConfigPick" onchange="toggleInput('stowVsConfigPickInput')">
+                                <span>Vulcan Stow Config</span>
+                                <span class="checkbox-tooltip">Select if you have Vulcan Stow Config package CR</span>
+                            </label>
                             <div id="stowVsConfigPickInput" class="input-box">
                                 <label for="stowVsConfigPickValue">Enter Vulcan Config cherry pick value:</label>
                                 <textarea id="stowVsConfigPickValue" placeholder=""></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" id="stowDeployArtifactsPick" onchange="toggleInput('stowDeployArtifactsPickInput')"> Deploy Artifacts</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="stowDeployArtifactsPick" onchange="toggleInput('stowDeployArtifactsPickInput')">
+                                <span>Deployment Artifacts</span>
+                                <span class="checkbox-tooltip">Select if you have Deployment Artifacts package CR</span>
+                            </label>
                             <div id="stowDeployArtifactsPickInput" class="input-box">
                                 <label for="stowDeployArtifactsPickValue">Enter Deploy Artifacts cherry pick value:</label>
                                 <textarea id="stowDeployArtifactsPickValue" placeholder=""></textarea>
@@ -441,31 +486,49 @@
                 </div>
                 <div class="checkbox-container">
                     <div class="form-group">
-                        <label><input type="checkbox" id="bufferMainline" onchange="toggleMainline()"> Mainline</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bufferMainline" onchange="toggleMainline()">
+                            <span>Mainline</span>
+                            <span class="checkbox-tooltip">Select this box if engineer tell you to build mainline</span>
+                        </label>
                     </div>
                     <div class="form-group">
-                        <label><input type="checkbox" id="bufferImageTag" onchange="toggleInput('bufferImageTagInput')"> Image Tag</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bufferImageTag" onchange="toggleInput('bufferImageTagInput')">
+                            <span>Image Tag</span>
+                            <span class="checkbox-tooltip">Select if you have any image tag need to swap</span>
+                        </label>
                         <div id="bufferImageTagInput" class="input-box">
                             <label for="bufferImageTagValue">Enter Image Tag:</label>
                             <textarea id="bufferImageTagValue" placeholder="Enter image tag"></textarea>
                         </div>
                     </div>
                     <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="checkbox" id="bufferCherryPick" onchange="toggleCherryPickSection('bufferCherryPickSection', 'bufferAddBtn')"> Cherry Pick Packages
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="bufferCherryPick" onchange="toggleCherryPickSection('bufferCherryPickSection', 'bufferAddBtn')">
+                            <span>Cherry Pick Packages</span>
+                            <span class="checkbox-tooltip">Select if you have any CR cherry pick</span>
                         </label>
                         <button id="bufferAddBtn" style="display: none; background-color: #4CAF50; color: white; border: none; border-radius: 6px; padding: 2px 10px; font-size: 12px; text-align: center; cursor: pointer;">Add Package</button>
                     </div>
                     <div id="bufferCherryPickSection" style="display: none; margin-top: 10px;">
                         <div class="form-group">
-                            <label><input type="checkbox" id="bufferVsConfigPick" onchange="toggleInput('bufferVsConfigPickInput')"> Vulcan Config</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="bufferVsConfigPick" onchange="toggleInput('bufferVsConfigPickInput')">
+                                <span>Vulcan Config</span>
+                                <span class="checkbox-tooltip">Select if you have Vulcan Stow Config package CR</span>
+                            </label>
                             <div id="bufferVsConfigPickInput" class="input-box">
                                 <label for="bufferVsConfigPickValue">Enter Vulcan Config cherry pick value:</label>
                                 <textarea id="bufferVsConfigPickValue" placeholder=""></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" id="bufferDeployArtifactsPick" onchange="toggleInput('bufferDeployArtifactsPickInput')"> Deploy Artifacts</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="bufferDeployArtifactsPick" onchange="toggleInput('bufferDeployArtifactsPickInput')">
+                                <span>Deploy Artifacts</span>
+                                <span class="checkbox-tooltip">Select if you have Deployment Artifacts package CR</span>
+                            </label>
                             <div id="bufferDeployArtifactsPickInput" class="input-box">
                                 <label for="bufferDeployArtifactsPickValue">Enter Deploy Artifacts cherry pick value:</label>
                                 <textarea id="bufferDeployArtifactsPickValue" placeholder=""></textarea>
@@ -494,31 +557,49 @@
                 </div>
                 <div class="checkbox-container">
                     <div class="form-group">
-                        <label><input type="checkbox" id="transferMainline" onchange="toggleMainline()"> Mainline</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="transferMainline" onchange="toggleMainline()">
+                            <span>Mainline</span>
+                            <span class="checkbox-tooltip">Select this box if engineer tell you to build mainline</span>
+                        </label>
                     </div>
                     <div class="form-group">
-                        <label><input type="checkbox" id="transferImageTag" onchange="toggleInput('transferImageTagInput')"> Image Tag</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="transferImageTag" onchange="toggleInput('transferImageTagInput')">
+                            <span>Image Tag</span>
+                            <span class="checkbox-tooltip">Select if you have any image tag need to swap</span>
+                        </label>
                         <div id="transferImageTagInput" class="input-box">
                             <label for="transferImageTagValue">Enter Image Tag:</label>
                             <textarea id="transferImageTagValue" placeholder="Enter image tag"></textarea>
                         </div>
                     </div>
                     <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                        <label style="display: flex; align-items: center; gap: 5px;">
-                            <input type="checkbox" id="transferCherryPick" onchange="toggleCherryPickSection('transferCherryPickSection', 'transferAddBtn')"> Cherry Pick Packages
+                        <label class="checkbox-label" style="display: flex; align-items: center; gap: 5px;">
+                            <input type="checkbox" id="transferCherryPick" onchange="toggleCherryPickSection('transferCherryPickSection', 'transferAddBtn')">
+                            <span>Cherry Pick Packages</span>
+                            <span class="checkbox-tooltip">Select if you have any CR cherry pick</span>
                         </label>
                         <button id="transferAddBtn" style="display: none; background-color: #4CAF50; color: white; border: none; border-radius: 6px; padding: 2px 10px; font-size: 12px; text-align: center; cursor: pointer;">Add Package</button>
                     </div>
                     <div id="transferCherryPickSection" style="display: none; margin-top: 10px;">
                         <div class="form-group">
-                            <label><input type="checkbox" id="transferVsConfigPick" onchange="toggleInput('transferVsConfigPickInput')"> Vulcan Config</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="transferVsConfigPick" onchange="toggleInput('transferVsConfigPickInput')">
+                                <span>Vulcan Config</span>
+                                <span class="checkbox-tooltip">Select if you have Vulcan Stow Config package CR</span>
+                            </label>
                             <div id="transferVsConfigPickInput" class="input-box">
                                 <label for="transferVsConfigPickValue">Enter Vulcan Config cherry pick value:</label>
                                 <textarea id="transferVsConfigPickValue" placeholder=""></textarea>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label><input type="checkbox" id="transferDeployArtifactsPick" onchange="toggleInput('transferDeployArtifactsPickInput')"> Deploy Artifacts</label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="transferDeployArtifactsPick" onchange="toggleInput('transferDeployArtifactsPickInput')">
+                                <span>Deploy Artifacts</span>
+                                <span class="checkbox-tooltip">Select if you have Deployment Artifacts package CR</span>
+                            </label>
                             <div id="transferDeployArtifactsPickInput" class="input-box">
                                 <label for="transferDeployArtifactsPickValue">Enter Deploy Artifacts cherry pick value:</label>
                                 <textarea id="transferDeployArtifactsPickValue" placeholder=""></textarea>
@@ -533,6 +614,7 @@
             <div id="actionButtons">
                 <button id="generateBtn" onclick="generateSteps()">Guide Me!</button>
                 <button id="regenerateBtn" class="update" onclick="regenerate()" style="display: none;">Regenerate</button>
+                <button id="downloadBtn" class="download" onclick="downloadConfig()" style="display: none;">⭳</button>
             </div>
 
             <!-- Steps Guide -->
@@ -548,45 +630,47 @@
             </div>
         </div>
     </div>
+
+    <button id="resetBtn" class="reset" onclick="resetForm()">&#10227;</button>
+    <p class="version-text" id="version"></p>
 <!-- Version     -->
     <p class="version-text" id="version"></p>
 
     <script>
-// Set the version
-        const ver = "v4.0";
-        
+        // Set the version text in the UI
+        const ver = "v5.0";
         document.getElementById("version").innerHTML = ver;
 
-// Build Tracking
-        document.addEventListener('DOMContentLoaded',function buildTracking (){    
-        const eventIdUrl = 'https://quip-amazon.com/mDNJApkofexx/Vulcan-Stow-Daily-QA-Build-Tracking#temp:C:aIT0dcbc4e1e1544ad1be71c2d3c'
-        const links = document.querySelectorAll('.build-tracking');
-        links.forEach(link => {
-            link.href = eventIdUrl;
-            link.target = 'tracking';
-        })
+        // Set build tracking links for Event ID fields
+        document.addEventListener('DOMContentLoaded', function buildTracking () {    
+            const eventIdUrl = 'https://quip-amazon.com/mDNJApkofexx/Vulcan-Stow-Daily-QA-Build-Tracking#temp:C:aIT0dcbc4e1e1544ad1be71c2d3c'
+            const links = document.querySelectorAll('.build-tracking');
+            links.forEach(link => {
+                link.href = eventIdUrl;
+                link.target = 'tracking';
+            });
         });
-        // Add this at the beginning of the script section
+
+        // Tooltip text for each step in the workflow
         const stepTooltips = {
-            'Step 1': 'Creates a new workspace with the specified subsystem deployment artifacts.Then navigate to workspace directory. Since limited to use CR Pull, CR Pull step likely to bypass.',
+            'Step 1': 'Creates a new workspace with the specified subsystem deployment artifacts at home directory. Then navigate to workspace directory to pull 2 basic packages (VulcanStowconfig & Deployment Artifacts).',
             'Step 2': 'Pull additional service packages if specified.',
-            'Step 3': 'Navigate to VulcanStowConfig directory for cherry pick if specified then build the local environment for specified station.',
-            'Step 4': 'Navigate to different service package directory that need cherry pick.',
-            'Step 5': 'Navigate to the deployment artifacts and apply cherry pick if needed.',
+            'Step 3': 'Navigate to VulcanStowConfig directory for cherry pick if specified.',
+            'Step 4': 'Cherry Pick CR for additional packages, otherwise build the local environment for specified station. Then navigate to different service package directory if specified otherwise will navigate to workspace directory.',
+            'Step 5': 'Navigate to the deployment artifacts directory and apply cherry pick if specified.',
             'Step 6': 'Modify docker-compose.yaml for image tag if needed.',
-            'Step 7': 'Build the workflow using brazil-build using Deployment Artifacts package.',
-            'Step 8': 'Rsync artifacts to the target deployment workflow directory.',
-            'Step 9': 'Navigate to the worflow directory.',
+            'Step 7': 'Build the workflow using Deployment Artifacts package.',
+            'Step 8': 'Rsync builded artifacts to the target deployment workflow directory.',
+            'Step 9': 'Navigate to the workflow directory.',
             'Step 10': 'Execute the launch script to start the workflow.'
         };
 
-        // Modify the step HTML generation in stowSteps, bufferSteps, and transferSteps
-        // Replace <strong>Step X:</strong> with this new format:
+        // Step tooltips header
         function createStepHeader(stepNum) {
             return `<strong>Step ${stepNum}:</strong><span class="tooltip-btn">?<span class="tooltip-content">${stepTooltips['Step ' + stepNum]}</span></span>`;
         }
 
-        // Utility Functions
+        // Utility: Generate HTML for a section (not used for transfer section)
         function generateSectionHTML(sectionId, workcellOptions) {
             return `
                 <div id="${sectionId}Section" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
@@ -641,22 +725,22 @@
             `;
         }
 
+        // Capitalize first letter of a string
         function capitalize(str) {
             return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
-        // Event Listeners
-        // Ensure each "Add" button is only bound to its respective section once
+        // Bind add package buttons for dynamic cherry-pick input
         document.getElementById('stowAddBtn').onclick = () => addDynamicInputs('stowDynamicInputs');
         document.getElementById('bufferAddBtn').onclick = () => addDynamicInputs('bufferDynamicInputs');
         document.getElementById('transferAddBtn').onclick = () => addDynamicInputs('transferDynamicInputs');
 
-        // Ensure add buttons are hidden on page load
+        // Hide add buttons on page load
         document.getElementById('stowAddBtn').style.display = 'none';
         document.getElementById('bufferAddBtn').style.display = 'none';
         document.getElementById('transferAddBtn').style.display = 'none';
 
-        // Utility Functions
+        // Mainline toggle: returns mainline/branch flags for each section
         function toggleMainline() {
             const stowMainlineCheckbox = document.getElementById('stowMainline');
             const bufferMainlineCheckbox = document.getElementById('bufferMainline');
@@ -671,16 +755,19 @@
             return mainlineValues;
         }
 
+        // Show/hide input boxes for cherry-pick, image tag, etc.
         function toggleInput(inputId) {
             const inputBox = document.getElementById(inputId);
             inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
         }
 
+        // Show/hide section (stow, buffer, transfer)
         function toggleSection(sectionId) {
             const section = document.getElementById(sectionId);
             section.style.display = section.style.display === 'block' ? 'none' : 'block';
         }
         
+        // Copy code block to clipboard and show feedback
         function copyToClipboard(elementId) {
             const codeElement = document.getElementById(elementId);
             const textToCopy = codeElement.textContent;
@@ -700,6 +787,7 @@
                 });
         }
         
+        // Update workspace title as user types date/title
         function updateWorkspaceTitle() {
             const testTitle = document.getElementById('testTitle').value || '[testTitle]';
             const testDate = document.getElementById('testDate').value || '[date]';
@@ -973,6 +1061,7 @@ ${step5Command}</code>
             document.getElementById('stepsGuide').style.display = 'block';
             document.getElementById('generateBtn').style.display = 'none';
             document.getElementById('regenerateBtn').style.display = 'inline-block';
+            document.getElementById('downloadBtn').style.display = 'inline-block';
 
             // Automatically open the first visible tab
             const firstVisibleTab = document.querySelector('.tab button[style*="inline-block"]');
@@ -1003,7 +1092,8 @@ ${step5Command}</code>
             // Hide steps and show form
             document.getElementById('stepsGuide').style.display = 'none';
             document.getElementById('generateBtn').style.display = 'inline-block';
-
+            document.getElementById('regenerateBtn').style.display = 'none';
+            document.getElementById('downloadBtn').style.display = 'none';
             // Reset all form fields
             document.getElementById('testTitle').value = '';
             document.getElementById('testDate').value = '';
@@ -1051,6 +1141,7 @@ ${step5Command}</code>
             window.transferVsconfig = '';
         }
 
+        // Show/hide cherry-pick section and add button
         function toggleCherryPickSection(sectionId, buttonId) {
             const section = document.getElementById(sectionId);
             const button = document.getElementById(buttonId);
@@ -1059,6 +1150,7 @@ ${step5Command}</code>
             button.style.display = isVisible ? 'none' : 'inline-block';
         }
 
+        // Add dynamic cherry-pick input fields
         function addDynamicInputs(sectionId) {
             const section = document.getElementById(sectionId);
             const inputGroup = document.createElement('div');
@@ -1083,12 +1175,14 @@ ${step5Command}</code>
             inputGroup.remove();
         }
 
+        // Show/hide add button for cherry-pick
         function toggleAddButton(checkboxId, buttonId) {
             const checkbox = document.getElementById(checkboxId);
             const button = document.getElementById(buttonId);
             button.style.display = checkbox.checked ? 'inline-block' : 'none';
         }
 
+        // Bind add button toggles for cherry-pick checkboxes
         document.getElementById('stowCherryPick').addEventListener('change', () => toggleAddButton('stowCherryPick', 'stowAddBtn'));
         document.getElementById('bufferCherryPick').addEventListener('change', () => toggleAddButton('bufferCherryPick', 'bufferAddBtn'));
         document.getElementById('transferCherryPick').addEventListener('change', () => toggleAddButton('transferCherryPick', 'transferAddBtn'));
@@ -1104,6 +1198,7 @@ ${step5Command}</code>
         document.getElementById('bufferAddBtn').style.display = 'none';
         document.getElementById('transferAddBtn').style.display = 'none';
 
+        // Collect dynamic cherry-pick input values
         function getDynamicInputs(sectionId) {
             const packageNames = [];
             const gitCommands = [];
@@ -1120,6 +1215,7 @@ ${step5Command}</code>
             return { packageNames, gitCommands };
         }
 
+        // Store VulcanStowConfig cherry-pick value in global variable
         function toggleVulcanStowConfig(sectionId, inputBoxId, variableName) {
             const checkbox = document.getElementById(`${sectionId}VsConfigPick`);
             const inputBox = document.getElementById(inputBoxId);
@@ -1136,7 +1232,7 @@ ${step5Command}</code>
             window[variableName] = vsconfig; // Store the value in a global variable dynamically
         }
 
-        // Add reusable function to get image tag input
+        // Get image tag input value for a section
         function getImageTagInput(sectionId, inputBoxId) {
             const checkbox = document.getElementById(`${sectionId}ImageTag`);
             const inputBox = document.getElementById(inputBoxId);
@@ -1149,7 +1245,7 @@ ${step5Command}</code>
             return imageTag;
         }
 
-        // Add reusable function to get deploy artifacts input
+        // Get deploy artifacts input value for a section
         function getDeployArtifactsInput(sectionId, inputBoxId) {
             const checkbox = document.getElementById(`${sectionId}DeployArtifactsPick`);
             const inputBox = document.getElementById(inputBoxId);
@@ -1162,7 +1258,7 @@ ${step5Command}</code>
             return deployArtifacts;
         }
 
-        // Add these functions at the end of the script section
+        // Show/hide troubleshooting panel
         function toggleTroubleshoot() {
             const panel = document.getElementById('troubleshootPanel');
             const currentVersion = document.getElementById('version');
@@ -1176,6 +1272,7 @@ ${step5Command}</code>
             }
         }
 
+        // Regenerate steps (reset tabs, rerun generateSteps)
         function regenerate() {
             const stowTabBtn = document.getElementById('stowTabBtn');
             const bufferTabBtn = document.getElementById('bufferTabBtn');
@@ -1186,6 +1283,69 @@ ${step5Command}</code>
             transferTabBtn.style.display = 'none';
             
             generateSteps();
+        }
+
+        // Download configuration function
+        function downloadConfig() {
+            // Get mainline values for each section
+            const mainlineValues = toggleMainline();
+            
+            // Create configuration object
+            const config = {
+                workspaceTitle: document.getElementById('workspaceTitle').value,
+                sections: {}
+            };
+            
+            // Only add sections that are checked
+            if (document.getElementById('stowCheckbox').checked) {
+                config.sections.stow = {
+                    workcellId: document.getElementById('stowWorkcellId').value,
+                    eventId: document.getElementById('stowEventId').value,
+                    mainline: mainlineValues.stow,
+                    imageTag: document.getElementById('stowImageTagValue').value,
+                    vsConfigCR: document.getElementById('stowVsConfigPickValue').value,
+                    deployArtifactsCR: document.getElementById('stowDeployArtifactsPickValue').value,
+                    additionalPackages: getDynamicInputs('stowDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
+                };
+            }
+            
+            if (document.getElementById('bufferCheckbox').checked) {
+                config.sections.buffer = {
+                    workcellId: document.getElementById('bufferWorkcellId').value,
+                    eventId: document.getElementById('bufferEventId').value,
+                    mainline: document.getElementById('bufferMainline').checked,
+                    imageTag: document.getElementById('bufferImageTagValue').value,
+                    vsConfigCR: document.getElementById('bufferVsConfigPickValue').value,
+                    deployArtifactsCR: document.getElementById('bufferDeployArtifactsPickValue').value,
+                    additionalPackages: getDynamicInputs('bufferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
+                };
+            }
+            
+            if (document.getElementById('transferCheckbox').checked) {
+                config.sections.transfer = {
+                    workcellId: document.getElementById('transferWorkcellId').value,
+                    eventId: document.getElementById('transferEventId').value,
+                    mainline: document.getElementById('transferMainline').checked,
+                    imageTag: document.getElementById('transferImageTagValue').value,
+                    vsConfigCR: document.getElementById('transferVsConfigPickValue').value,
+                    deployArtifactsCR: document.getElementById('transferDeployArtifactsPickValue').value,
+                    additionalPackages: getDynamicInputs('transferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
+                };
+            }
+
+            // Convert to JSON string with pretty formatting
+            const configJson = JSON.stringify(config, null, 2);
+            
+            // Create blob and download
+            const blob = new Blob([configJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `config.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
