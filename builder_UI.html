@@ -343,7 +343,7 @@
     <div class="troubleshoot-panel">
         <button class="troubleshoot-btn" onclick="toggleTroubleshoot()">≡</button>
         <div class="troubleshoot-content" id="troubleshootPanel">
-            <button class="close-troubleshoot" onclick="toggleTroubleshoot()">›</button>
+            <button class="close-troubleshoot" onclick="toggleTroubleshoot()"><</button>
             <br></br>
             <h4>Troubleshooting Guide</h4>
                 <p>Failed to run Brazil<br>
@@ -1283,69 +1283,6 @@ ${step5Command}</code>
             transferTabBtn.style.display = 'none';
             
             generateSteps();
-        }
-
-        // Download configuration function
-        function downloadConfig() {
-            // Get mainline values for each section
-            const mainlineValues = toggleMainline();
-            
-            // Create configuration object
-            const config = {
-                workspaceTitle: document.getElementById('workspaceTitle').value,
-                sections: {}
-            };
-            
-            // Only add sections that are checked
-            if (document.getElementById('stowCheckbox').checked) {
-                config.sections.stow = {
-                    workcellId: document.getElementById('stowWorkcellId').value,
-                    eventId: document.getElementById('stowEventId').value,
-                    mainline: mainlineValues.stow,
-                    imageTag: document.getElementById('stowImageTagValue').value,
-                    vsConfigCR: document.getElementById('stowVsConfigPickValue').value,
-                    deployArtifactsCR: document.getElementById('stowDeployArtifactsPickValue').value,
-                    additionalPackages: getDynamicInputs('stowDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
-                };
-            }
-            
-            if (document.getElementById('bufferCheckbox').checked) {
-                config.sections.buffer = {
-                    workcellId: document.getElementById('bufferWorkcellId').value,
-                    eventId: document.getElementById('bufferEventId').value,
-                    mainline: document.getElementById('bufferMainline').checked,
-                    imageTag: document.getElementById('bufferImageTagValue').value,
-                    vsConfigCR: document.getElementById('bufferVsConfigPickValue').value,
-                    deployArtifactsCR: document.getElementById('bufferDeployArtifactsPickValue').value,
-                    additionalPackages: getDynamicInputs('bufferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
-                };
-            }
-            
-            if (document.getElementById('transferCheckbox').checked) {
-                config.sections.transfer = {
-                    workcellId: document.getElementById('transferWorkcellId').value,
-                    eventId: document.getElementById('transferEventId').value,
-                    mainline: document.getElementById('transferMainline').checked,
-                    imageTag: document.getElementById('transferImageTagValue').value,
-                    vsConfigCR: document.getElementById('transferVsConfigPickValue').value,
-                    deployArtifactsCR: document.getElementById('transferDeployArtifactsPickValue').value,
-                    additionalPackages: getDynamicInputs('transferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
-                };
-            }
-
-            // Convert to JSON string with pretty formatting
-            const configJson = JSON.stringify(config, null, 2);
-            
-            // Create blob and download
-            const blob = new Blob([configJson], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `config.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
         }
     </script>
 </body>
