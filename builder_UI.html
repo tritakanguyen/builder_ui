@@ -343,7 +343,7 @@
     <div class="troubleshoot-panel">
         <button class="troubleshoot-btn" onclick="toggleTroubleshoot()">≡</button>
         <div class="troubleshoot-content" id="troubleshootPanel">
-            <button class="close-troubleshoot" onclick="toggleTroubleshoot()"><</button>
+            <button class="close-troubleshoot" onclick="toggleTroubleshoot()">›</button>
             <br></br>
             <h4>Troubleshooting Guide</h4>
                 <p>Failed to run Brazil<br>
@@ -653,140 +653,123 @@
 
         // Tooltip text for each step in the workflow
         const stepTooltips = {
-            'Step 1': 'Creates a new workspace with the specified subsystem deployment artifacts at home directory. Then navigate to workspace directory to pull 2 basic packages (VulcanStowconfig & Deployment Artifacts).',
-            'Step 2': 'Pull additional service packages if specified.',
-            'Step 3': 'Navigate to VulcanStowConfig directory for cherry pick if specified.',
-            'Step 4': 'Cherry Pick CR for additional packages, otherwise build the local environment for specified station. Then navigate to different service package directory if specified otherwise will navigate to workspace directory.',
-            'Step 5': 'Navigate to the deployment artifacts directory and apply cherry pick if specified.',
-            'Step 6': 'Modify docker-compose.yaml for image tag if needed.',
-            'Step 7': 'Build the workflow using Deployment Artifacts package.',
-            'Step 8': 'Rsync builded artifacts to the target deployment workflow directory.',
-            'Step 9': 'Navigate to the workflow directory.',
-            'Step 10': 'Execute the launch script to start the workflow.'
+            1: 'Creates a new workspace with the specified subsystem deployment artifacts at home directory. Then navigate to workspace directory to pull 2 basic packages (VulcanStowconfig & Deployment Artifacts).',
+            2: 'Pull additional service packages if specified.',
+            3: 'Navigate to VulcanStowConfig directory for cherry pick if specified.',
+            4: 'Navigate to different service package directory to apply Cherry Pick CR if specified, otherwise just build the local environment for specified station then navigate to workspace directory.',
+            5: 'Navigate to the deployment artifacts directory and apply cherry pick if specified.',
+            6: 'Modify docker-compose.yaml for image tag if needed.',
+            7: 'Build the workflow using Deployment Artifacts package.',
+            8: 'Rsync builded artifacts to the target deployment workflow directory.',
+            9: 'Navigate to the workflow directory.',
+            10: 'Execute the launch script to start the workflow.'
         };
 
-        // Step tooltips header
-        function createStepHeader(stepNum) {
-            return `<strong>Step ${stepNum}:</strong><span class="tooltip-btn">?<span class="tooltip-content">${stepTooltips['Step ' + stepNum]}</span></span>`;
+        function stepHeader(stepNum) {
+            return `<strong>Step ${stepNum}:</strong>`;
+        }
+        function toolTips(stepNum) {
+            return `<span class=\"tooltip-btn\">?<span class=\"tooltip-content\">${stepTooltips[stepNum]}</span></span>`;
         }
 
-        // Utility: Generate HTML for a section (not used for transfer section)
-        function generateSectionHTML(sectionId, workcellOptions) {
-            return `
-                <div id="${sectionId}Section" style="display: none; margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
-                    <h3>${capitalize(sectionId)} Section</h3>
-                    <div class="form-group">
-                        <label for="${sectionId}WorkcellId">Workcell ID:</label>
-                        <select id="${sectionId}WorkcellId">
-                            <option value="">Select Workcell ID</option>
-                            ${workcellOptions.map(option => `<option value="${option}">${option}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="${sectionId}EventId">Event ID: </label>
-                        <input type="text" id="${sectionId}EventId" placeholder="Event ID">
-                    </div>
-                    <div class="checkbox-container">
-                        <div class="form-group">
-                            <label><input type="checkbox" id="${sectionId}Mainline" onchange="toggleMainline()"> Mainline</label>
-                        </div>
-                        <div class="form-group">
-                            <label><input type="checkbox" id="${sectionId}ImageTag" onchange="toggleInput('${sectionId}ImageTagInput')"> Image Tag</label>
-                            <div id="${sectionId}ImageTagInput" class="input-box">
-                                <label for="${sectionId}ImageTagValue">Enter Image Tag:</label>
-                                <textarea id="${sectionId}ImageTagValue" placeholder="Enter image tag"></textarea>
-                            </div>
-                        </div>
-                        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-                            <label style="display: flex; align-items: center; gap: 5px;">
-                                <input type="checkbox" id="${sectionId}CherryPick" onchange="toggleCherryPickSection('${sectionId}CherryPickSection', '${sectionId}AddBtn')"> Cherry Pick Packages
-                            </label>
-                            <button id="${sectionId}AddBtn" style="display: none; background-color: #4CAF50; color: white; border: none; border-radius: 6px; width: 24px; height: 23px; font-size: 14px; text-align: center; padding: 0; cursor: pointer;">+</button>
-                        </div>
-                        <div id="${sectionId}CherryPickSection" style="display: none; margin-top: 10px;">
-                            <div class="form-group">
-                                <label><input type="checkbox" id="${sectionId}VsConfigPick" onchange="toggleInput('${sectionId}VsConfigPickInput')"> Vulcan Config</label>
-                                <div id="${sectionId}VsConfigPickInput" class="input-box">
-                                    <label for="${sectionId}VsConfigPickValue">Enter Vulcan Config cherry pick value:</label>
-                                    <textarea id="${sectionId}VsConfigPickValue" placeholder=""></textarea>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label><input type="checkbox" id="${sectionId}DeployArtifactsPick" onchange="toggleInput('${sectionId}DeployArtifactsPickInput')"> Deploy Artifacts</label>
-                                <div id="${sectionId}DeployArtifactsPickInput" class="input-box">
-                                    <label for="${sectionId}DeployArtifactsPickValue">Enter Deploy Artifacts cherry pick value:</label>
-                                    <textarea id="${sectionId}DeployArtifactsPickValue" placeholder=""></textarea>
-                                </div>
-                            </div>
-                            <div id="${sectionId}DynamicInputs"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Capitalize first letter of a string
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
-
-        // Bind add package buttons for dynamic cherry-pick input
-        document.getElementById('stowAddBtn').onclick = () => addDynamicInputs('stowDynamicInputs');
-        document.getElementById('bufferAddBtn').onclick = () => addDynamicInputs('bufferDynamicInputs');
-        document.getElementById('transferAddBtn').onclick = () => addDynamicInputs('transferDynamicInputs');
-
-        // Hide add buttons on page load
-        document.getElementById('stowAddBtn').style.display = 'none';
-        document.getElementById('bufferAddBtn').style.display = 'none';
-        document.getElementById('transferAddBtn').style.display = 'none';
-
-        // Mainline toggle: returns mainline/branch flags for each section
-        function toggleMainline() {
-            const stowMainlineCheckbox = document.getElementById('stowMainline');
-            const bufferMainlineCheckbox = document.getElementById('bufferMainline');
-            const transferMainlineCheckbox = document.getElementById('transferMainline');
-            
-            const mainlineValues = {
-                stow: stowMainlineCheckbox.checked ? '--branch mainline' : '--latest',
-                buffer: bufferMainlineCheckbox.checked ? '--branch mainline' : '--latest',
-                transfer: transferMainlineCheckbox.checked ? '--branch mainline' : '--latest'
+        // Step functions for modular step generation
+        function step1(section, stepNum, workspace, eventId, mainlineValue) {
+            let artifact = section === 'stow' ? 'VulcanReorientStowDeploymentArtifacts' : section === 'buffer' ? 'VulcanStowBufferDeploymentArtifacts' : 'VulcanInductTransferDeploymentArtifacts';
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(1)}
+<code id=\"${section}Step${stepNum}\">cd
+brazil ws create --versionset VulcanStowUnifiedDeploymentArtifacts/development --name workspace-${workspace} ${eventId}
+cd workspace-${workspace}
+brazil ws --use --platform AL2_x86_64
+brazil setup platform-support --force
+brazil ws --use -p VulcanStowConfig -p ${artifact} ${mainlineValue}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
             };
-            
-            return mainlineValues;
+        }
+        function step2(section, stepNum, packageNames) {
+            let step2Packages = packageNames.length > 0 
+                'brazil ws --use' + packageNames.map(pkg => `-p ${pkg}`).join(' ');
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(2)}
+<code id=\"${section}Step${stepNum}\">${step2Packages}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step3(section, stepNum, vsconfig) {
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(3)}
+<code id=\"${section}Step${stepNum}\">cd src/VulcanStowConfig
+${vsconfig}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step4(section, stepNum, packageNames, gitCommands, workcellId) {
+            let step4Commands = packageNames.length > 0 
+                ? packageNames.map((pkg, index) => `cd ../${pkg}\n${gitCommands[index]}\n`).join('\n') + `cd ../..\nbrazil-recursive-cmd --allPackages brazil-build`
+                : `brazil-build local beta NAFulfillment Atlas Lab ${workcellId}\ncd ../..`;
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(4)}
+<code id=\"${section}Step${stepNum}\">${step4Commands}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step5(section, stepNum, deployArtifacts) {
+            let artifact = section === 'stow' ? 'VulcanReorientStowDeploymentArtifacts' : section === 'buffer' ? 'VulcanStowBufferDeploymentArtifacts' : 'VulcanInductTransferDeploymentArtifacts';
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(5)}
+<code id=\"${section}Step${stepNum}\">cd src/${artifact}
+${deployArtifacts}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step6(section, stepNum, imageTag) {
+            let step6Command = `nano docker-compose.yaml\nTag image below:<br>\n${imageTag}`;
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(6)}
+<code id=\"${section}Step${stepNum}\">${step6Command}</code>
+</div>`
+            };
+        }
+        function step7(section, stepNum) {
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(7)}
+<code id=\"${section}Step${stepNum}\">brazil-build</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step8(section, stepNum, workspace) {
+            let dir = section === 'stow' ? 'stow' : section === 'buffer' ? 'buffer' : 'induct_transfer';
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(8)}
+<code id=\"${section}Step${stepNum}\">sudo rsync -avzh -O --no-perms --no-owner --no-group --delete --stats --copy-links --exclude /build/private ./build/ /opt/carbon/${dir}/workflow-${workspace}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step9(section, stepNum, workspace) {
+            let dir = section === 'stow' ? 'stow' : section === 'buffer' ? 'buffer' : 'induct_transfer';
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(9)}
+<code id=\"${section}Step${stepNum}\">cd /opt/carbon/${dir}/workflow-${workspace}</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
+        }
+        function step10(section, stepNum) {
+            return {
+                html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(10)}
+<code id=\"${section}Step${stepNum}\">./launch</code>
+<button class=\"copy-btn\" onclick=\"copyToClipboard('${section}Step${stepNum}')\">Copy</button>
+</div>`
+            };
         }
 
-        // Show/hide input boxes for cherry-pick, image tag, etc.
-        function toggleInput(inputId) {
-            const inputBox = document.getElementById(inputId);
-            inputBox.style.display = inputBox.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // Show/hide section (stow, buffer, transfer)
-        function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            section.style.display = section.style.display === 'block' ? 'none' : 'block';
-        }
-        
-        // Copy code block to clipboard and show feedback
-        function copyToClipboard(elementId) {
-            const codeElement = document.getElementById(elementId);
-            const textToCopy = codeElement.textContent;
-            
-            navigator.clipboard.writeText(textToCopy)
-                .then(() => {
-                    const copyBtn = codeElement.parentElement.querySelector('.copy-btn');
-                    const originalText = copyBtn.textContent;
-                    
-                    copyBtn.textContent = 'Copied!';
-                    setTimeout(() => {
-                        copyBtn.textContent = originalText;
-                    }, 1500);
-                })
-                .catch(err => {
-                    console.error('Failed to copy text: ', err);
-                });
-        }
-        
         // Update workspace title as user types date/title
         function updateWorkspaceTitle() {
             const testTitle = document.getElementById('testTitle').value || '[testTitle]';
@@ -795,278 +778,147 @@
             document.getElementById('workspaceTitle').value = workspaceTitle;
         }
 
-        document.getElementById('generateBtn').addEventListener('click', generateSteps); // Ensure the button is bound to the function
+        // Ensure the generate button is bound to generateSteps
 
         function generateSteps() {
-            // Get general values from inputs
-            const testTitle = document.getElementById('testTitle').value || '[testTitle]';
-            const testDate = document.getElementById('testDate').value || '[date]';
-            const workspace = document.getElementById('workspaceTitle').value || `${testDate}-${testTitle}`;
-            // get mainline value
-            const mainlineValues = toggleMainline();
-            const stowMainlineValue = mainlineValues.stow;
-            const bufferMainlineValue = mainlineValues.buffer;
-            const transferMainlineValue = mainlineValues.transfer;
-            //get event ID
-            const eventIdValue = document.getElementById('stowEventId').value;
-            const eventId = eventIdValue ? `--eventId ${eventIdValue}` : '';
-            const bufferEventIdValue = document.getElementById('bufferEventId').value;
-            const bufferEventId = bufferEventIdValue ? `--eventId ${bufferEventIdValue}` : '';
-            const transferEventIdValue = document.getElementById('transferEventId').value;
-            const transferEventId = transferEventIdValue ? `--eventId ${transferEventIdValue}` : '';
-            //get workcell ID
-            const stowWorkcellId = document.getElementById('stowWorkcellId').value || '[workcellId]'; 
-            const bufferWorkcellId = document.getElementById('bufferWorkcellId').value || '[workcellId]'; 
-            const transferWorkcellId = document.getElementById('transferWorkcellId').value || '[workcellId]';
+            try {
+                // Clear previous steps
+                document.getElementById('stowSteps').innerHTML = '';
+                document.getElementById('bufferSteps').innerHTML = '';
+                document.getElementById('transferSteps').innerHTML = '';
+                // Get general values from inputs
+                const testTitle = document.getElementById('testTitle').value || '[testTitle]';
+                const testDate = document.getElementById('testDate').value || '[date]';
+                const workspace = document.getElementById('workspaceTitle').value || `${testDate}-${testTitle}`;
+                // get mainline value
+                const mainlineValues = toggleMainline();
+                const stowMainlineValue = mainlineValues.stow;
+                const bufferMainlineValue = mainlineValues.buffer;
+                const transferMainlineValue = mainlineValues.transfer;
+                //get event ID
+                const eventIdValue = document.getElementById('stowEventId').value;
+                const eventId = eventIdValue ? `--eventId ${eventIdValue}` : '';
+                const bufferEventIdValue = document.getElementById('bufferEventId').value;
+                const bufferEventId = bufferEventIdValue ? `--eventId ${bufferEventIdValue}` : '';
+                const transferEventIdValue = document.getElementById('transferEventId').value;
+                const transferEventId = transferEventIdValue ? `--eventId ${transferEventIdValue}` : '';
+                //get workcell ID
+                const stowWorkcellId = document.getElementById('stowWorkcellId').value || '[workcellId]'; 
+                const bufferWorkcellId = document.getElementById('bufferWorkcellId').value || '[workcellId]'; 
+                const transferWorkcellId = document.getElementById('transferWorkcellId').value || '[workcellId]';
 
-            // Reset tab visibility
-            document.getElementById('stowTabBtn').style.display = 'none';
-            document.getElementById('transferTabBtn').style.display = 'none';
-            document.getElementById('bufferTabBtn').style.display = 'none';
+                // Reset tab visibility
+                document.getElementById('stowTabBtn').style.display = 'none';
+                document.getElementById('transferTabBtn').style.display = 'none';
+                document.getElementById('bufferTabBtn').style.display = 'none';
 
-            // Generate steps for Stow Section
-            
-            if (document.getElementById('stowCheckbox').checked) {
-                const sectionID = 'stow'; // Dynamically set sectionID
-                document.getElementById(`${sectionID}TabBtn`).style.display = 'inline-block';
-                toggleVulcanStowConfig(sectionID, `${sectionID}VsConfigPickInput`, `${sectionID}Vsconfig`);
-                const { packageNames, gitCommands } = getDynamicInputs(`${sectionID}DynamicInputs`);
-                const imageTag = getImageTagInput(sectionID, `${sectionID}ImageTagInput`);
-                const deployArtifacts = getDeployArtifactsInput(sectionID, `${sectionID}DeployArtifactsPickInput`);
-                const step2Packages = packageNames.length > 0 
-                    ? 'brazil ws --use' + packageNames.map(pkg => ` -p ${pkg}`).join(' ')
-                    : 'Move to next step';
+                let anySection = false;
 
-                const step4Commands = packageNames.length > 0 
-                    ? packageNames.map((pkg, index) => `cd ../${pkg}
-${gitCommands[index]}
-`).join('\n') + `cd ../..
-brazil-recursive-cmd --allPackages brazil-build`
-                    : `brazil-build local beta NAFulfillment Atlas Lab ${stowWorkcellId}
-cd ../..`;
+                // Defensive: ensure global vsconfig variables exist
+                if (typeof window.stowVsconfig === 'undefined') window.stowVsconfig = '';
+                if (typeof window.bufferVsconfig === 'undefined') window.bufferVsconfig = '';
+                if (typeof window.transferVsconfig === 'undefined') window.transferVsconfig = '';
 
-                const step5Command = deployArtifacts;
-
-                const step6Command = imageTag 
-                    ? `nano docker-compose.yaml\nTag image below:<br>\n${imageTag}`
-                    : 'No image need to be tagged. Move to next step';
-                
-                const stowSteps = `
-                    <div class="step">${createStepHeader(1)}
-                        <code id="stowStep1">cd
-brazil ws create --versionset VulcanStowUnifiedDeploymentArtifacts/development --name workspace-${workspace} ${eventId}
-cd workspace-${workspace}
-brazil ws --use --platform AL2_x86_64
-brazil setup platform-support --force
-brazil ws --use -p VulcanStowConfig -p VulcanReorientStowDeploymentArtifacts ${stowMainlineValue}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep1')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(2)}
-                         <code id="stowStep2">${step2Packages}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep2')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(3)}
-                         <code id="stowStep3">cd src/VulcanStowConfig
-${window.stowVsconfig}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep3')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(4)}
-                         <code id="stowStep4">${step4Commands}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep4')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(5)}
-                         <code id="stowStep5">cd src/VulcanReorientStowDeploymentArtifacts
-${step5Command}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep5')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(6)}
-                         <code id="stowStep6">${step6Command}</code>
-                    </div>
-                    <div class="step">${createStepHeader(7)}
-                         <code id="stowStep7">brazil-build</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep7')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(8)}
-                         <code id="stowStep8">sudo rsync -avzh -O --no-perms --no-owner --no-group --delete --stats --copy-links --exclude /build/private ./build/ /opt/carbon/stow/workflow-${workspace}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep8')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(9)}
-                         <code id="stowStep9">cd /opt/carbon/stow/workflow-${workspace}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep9')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(10)}
-                         <code id="stowStep10">./launch</code>
-                        <button class="copy-btn" onclick="copyToClipboard('stowStep10')">Copy</button>
-                    </div>
-                `;
-                document.getElementById('stowSteps').innerHTML = stowSteps;
-            }
-
-            // Generate steps for Buffer Section
-            if (document.getElementById('bufferCheckbox').checked) {
-                const sectionID = 'buffer'; // Dynamically set sectionID
-                document.getElementById(`${sectionID}TabBtn`).style.display = 'inline-block';
-                toggleVulcanStowConfig(sectionID, `${sectionID}VsConfigPickInput`, `${sectionID}Vsconfig`);
-                const { packageNames, gitCommands } = getDynamicInputs(`${sectionID}DynamicInputs`);
-                const imageTag = getImageTagInput(sectionID, `${sectionID}ImageTagInput`);
-                const deployArtifacts = getDeployArtifactsInput(sectionID, `${sectionID}DeployArtifactsPickInput`);
-                const step2Packages = packageNames.length > 0 
-                    ? 'brazil ws --use' + packageNames.map(pkg => ` -p ${pkg}`).join(' ')
-                    : 'Move to next step';
-
-                const step4Commands = packageNames.length > 0 
-                    ? packageNames.map((pkg, index) => `cd ../${pkg}
-${gitCommands[index]}
-`).join('\n') + `cd ../..
-brazil-recursive-cmd --allPackages brazil-build`
-                    : `brazil-build local beta NAFulfillment Atlas Lab ${bufferWorkcellId}
-cd ../..`;
-
-                const step5Command = deployArtifacts;
-
-                const step6Command = imageTag 
-                    ? `nano docker-compose.yaml\nTag image below:<br>\n${imageTag}`
-                    : 'No image need to be tagged. Move to next step';
-
-                const bufferSteps = `
-                    <div class="step">${createStepHeader(1)}
-                        <code id="bufferStep1">cd
-brazil ws create --versionset VulcanStowUnifiedDeploymentArtifacts/development --name workspace-${workspace} ${bufferEventId}
-cd workspace-${workspace}
-brazil ws --use --platform AL2_x86_64
-brazil setup platform-support --force
-brazil ws --use -p VulcanStowConfig -p VulcanStowBufferDeploymentArtifacts ${bufferMainlineValue}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep1')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(2)}
-                         <code id="bufferStep2">${step2Packages}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep2')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(3)}
-                         <code id="bufferStep3">cd src/VulcanStowConfig
-${window.bufferVsconfig}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep3')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(4)}
-                         <code id="bufferStep4">${step4Commands}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep4')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(5)}
-                         <code id="bufferStep5">cd src/VulcanStowBufferDeploymentArtifacts
-${step5Command}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep5')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(6)}
-                         <code id="bufferStep6">${step6Command}</code>
-                    </div>
-                    <div class="step">${createStepHeader(7)}
-                         <code id="bufferStep7">brazil-build</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep7')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(8)}
-                         <code id="bufferStep8">sudo rsync -avzh -O --no-perms --no-owner --no-group --delete --stats --copy-links --exclude /build/private ./build/ /opt/carbon/buffer/workflow-${workspace}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep8')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(9)}
-                         <code id="bufferStep9">cd /opt/carbon/buffer/workflow-${workspace}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep9')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(10)}
-                         <code id="bufferStep9">./launch</code>
-                        <button class="copy-btn" onclick="copyToClipboard('bufferStep9')">Copy</button>
-                    </div>
-                `;
-                document.getElementById('bufferSteps').innerHTML = bufferSteps;
-            }
-
-            // Generate steps for Transfer Section
-            if (document.getElementById('transferCheckbox').checked) {
-                const sectionID = 'transfer'; // Dynamically set sectionID
-                document.getElementById(`${sectionID}TabBtn`).style.display = 'inline-block';
-                toggleVulcanStowConfig(sectionID, `${sectionID}VsConfigPickInput`, `${sectionID}Vsconfig`);
-                const { packageNames, gitCommands } = getDynamicInputs(`${sectionID}DynamicInputs`);
-                const imageTag = getImageTagInput(sectionID, `${sectionID}ImageTagInput`);
-                const deployArtifacts = getDeployArtifactsInput(sectionID, `${sectionID}DeployArtifactsPickInput`);
-                const step2Packages = packageNames.length > 0 
-                    ? 'brazil ws --use' + packageNames.map(pkg => ` -p ${pkg}`).join(' ')
-                    : 'Move to next step';
-
-                const step4Commands = packageNames.length > 0 
-                    ? packageNames.map((pkg, index) => `cd ../${pkg}
-${gitCommands[index]}
- `).join('\n') + `
-cd ../..
-brazil-recursive-cmd --allPackages brazil-build`
-                    : `brazil-build local beta NAFulfillment Atlas Lab ${transferWorkcellId}
-cd ../..`;
-
-                const step5Command = deployArtifacts;
-
-                const step6Command = imageTag 
-                    ? `nano docker-compose.yaml\nTag image below:<br>\n${imageTag}`
-                    : 'No image need to be tagged. Move to next step';
-
-                const transferSteps = `
-                    <div class="step">${createStepHeader(1)}
-                        <code id="transferStep1">cd
-brazil ws create --versionset VulcanStowUnifiedDeploymentArtifacts/development --name workspace-${workspace} ${transferEventId}
-cd workspace-${workspace}
-brazil ws --use --platform AL2_x86_64
-brazil setup platform-support --force
-brazil ws --use -p VulcanStowConfig -p VulcanInductTransferDeploymentArtifacts ${transferMainlineValue}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep1')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(2)}
-                         <code id="transferStep2">${step2Packages}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep2')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(3)}
-                         <code id="transferStep3">cd src/VulcanStowConfig
-${window.transferVsconfig}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep3')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(4)}
-                         <code id="transferStep4">${step4Commands}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep4')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(5)}
-                         <code id="transferStep5">cd src/VulcanInductTransferDeploymentArtifacts
-${step5Command}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep5')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(6)}
-                         <code id="transferStep6">${step6Command}</code>
-                    </div>
-                    <div class="step">${createStepHeader(7)}
-                         <code id="transferStep7">brazil-build</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep7')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(8)}
-                         <code id="transferStep8">sudo rsync -avzh -O --no-perms --no-owner --no-group --delete --stats --copy-links --exclude /build/private ./build/ /opt/carbon/induct_transfer/workflow-${workspace}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep8')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(9)}
-                         <code id="transferStep9">cd /opt/carbon/induct_transfer/workflow-${workspace}</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep9')">Copy</button>
-                    </div>
-                    <div class="step">${createStepHeader(10)}
-                         <code id="transferStep10">./launch</code>
-                        <button class="copy-btn" onclick="copyToClipboard('transferStep10')">Copy</button>
-                    </div>
-                `;
-                document.getElementById('transferSteps').innerHTML = transferSteps;
-            }
-
-            // Show the steps guide and update button visibility
-            document.getElementById('stepsGuide').style.display = 'block';
-            document.getElementById('generateBtn').style.display = 'none';
-            document.getElementById('regenerateBtn').style.display = 'inline-block';
-            document.getElementById('downloadBtn').style.display = 'inline-block';
-
-            // Automatically open the first visible tab
-            const firstVisibleTab = document.querySelector('.tab button[style*="inline-block"]');
-            if (firstVisibleTab) {
-                firstVisibleTab.click();
+                // Generate steps for Stow Section
+                if (document.getElementById('stowCheckbox').checked) {
+                    anySection = true;
+                    const sectionID = 'stow';
+                    document.getElementById(`${sectionID}TabBtn`).style.display = 'inline-block';
+                    toggleVulcanStowConfig(sectionID, `${sectionID}VsConfigPickInput`, `${sectionID}Vsconfig`);
+                    const { packageNames, gitCommands } = getDynamicInputs(`${sectionID}DynamicInputs`);
+                    const imageTag = getImageTagInput(sectionID, `${sectionID}ImageTagInput`);
+                    const imageTagChecked = document.getElementById(`${sectionID}ImageTag`).checked;
+                    const deployArtifacts = getDeployArtifactsInput(sectionID, `${sectionID}DeployArtifactsPickInput`);
+                    let steps = [];
+                    let stepNum = 1;
+                    steps.push(step1(sectionID, stepNum++, workspace, eventId, stowMainlineValue).html);
+                    if (packageNames.length > 0) {
+                        steps.push(step2(sectionID, stepNum++, packageNames).html);
+                    }
+                    steps.push(step3(sectionID, stepNum++, window.stowVsconfig).html);
+                    steps.push(step4(sectionID, stepNum++, packageNames, gitCommands, stowWorkcellId).html);
+                    steps.push(step5(sectionID, stepNum++, deployArtifacts).html);
+                    if (imageTagChecked) {
+                        steps.push(step6(sectionID, stepNum++, imageTag).html);
+                    }
+                    steps.push(step7(sectionID, stepNum++).html);
+                    steps.push(step8(sectionID, stepNum++, workspace).html);
+                    steps.push(step9(sectionID, stepNum++, workspace).html);
+                    steps.push(step10(sectionID, stepNum++).html);
+                    document.getElementById('stowSteps').innerHTML = steps.join('');
+                }
+                // Generate steps for Buffer Section
+                if (document.getElementById('bufferCheckbox').checked) {
+                    anySection = true;
+                    const sectionID = 'buffer';
+                    document.getElementById(`${sectionID}TabBtn`).style.display = 'inline-block';
+                    toggleVulcanStowConfig(sectionID, `${sectionID}VsConfigPickInput`, `${sectionID}Vsconfig`);
+                    const { packageNames, gitCommands } = getDynamicInputs(`${sectionID}DynamicInputs`);
+                    const imageTag = getImageTagInput(sectionID, `${sectionID}ImageTagInput`);
+                    const imageTagChecked = document.getElementById(`${sectionID}ImageTag`).checked;
+                    const deployArtifacts = getDeployArtifactsInput(sectionID, `${sectionID}DeployArtifactsPickInput`);
+                    let steps = [];
+                    let stepNum = 1;
+                    steps.push(step1(sectionID, stepNum++, workspace, bufferEventId, bufferMainlineValue).html);
+                    if (packageNames.length > 0) {
+                        steps.push(step2(sectionID, stepNum++, packageNames).html);
+                    }
+                    steps.push(step3(sectionID, stepNum++, window.bufferVsconfig).html);
+                    steps.push(step4(sectionID, stepNum++, packageNames, gitCommands, bufferWorkcellId).html);
+                    steps.push(step5(sectionID, stepNum++, deployArtifacts).html);
+                    if (imageTagChecked) {
+                        steps.push(step6(sectionID, stepNum++, imageTag).html);
+                    }
+                    steps.push(step7(sectionID, stepNum++).html);
+                    steps.push(step8(sectionID, stepNum++, workspace).html);
+                    steps.push(step9(sectionID, stepNum++, workspace).html);
+                    steps.push(step10(sectionID, stepNum++).html);
+                    document.getElementById('bufferSteps').innerHTML = steps.join('');
+                }
+                // Generate steps for Transfer Section
+                if (document.getElementById('transferCheckbox').checked) {
+                    anySection = true;
+                    const sectionID = 'transfer';
+                    document.getElementById(`${sectionID}TabBtn`).style.display = 'inline-block';
+                    toggleVulcanStowConfig(sectionID, `${sectionID}VsConfigPickInput`, `${sectionID}Vsconfig`);
+                    const { packageNames, gitCommands } = getDynamicInputs(`${sectionID}DynamicInputs`);
+                    const imageTag = getImageTagInput(sectionID, `${sectionID}ImageTagInput`);
+                    const imageTagChecked = document.getElementById(`${sectionID}ImageTag`).checked;
+                    const deployArtifacts = getDeployArtifactsInput(sectionID, `${sectionID}DeployArtifactsPickInput`);
+                    let steps = [];
+                    let stepNum = 1;
+                    steps.push(step1(sectionID, stepNum++, workspace, transferEventId, transferMainlineValue).html);
+                    if (packageNames.length > 0) {
+                        steps.push(step2(sectionID, stepNum++, packageNames).html);
+                    }
+                    steps.push(step3(sectionID, stepNum++, window.transferVsconfig).html);
+                    steps.push(step4(sectionID, stepNum++, packageNames, gitCommands, transferWorkcellId).html);
+                    steps.push(step5(sectionID, stepNum++, deployArtifacts).html);
+                    if (imageTagChecked) {
+                        steps.push(step6(sectionID, stepNum++, imageTag).html);
+                    }
+                    steps.push(step7(sectionID, stepNum++).html);
+                    steps.push(step8(sectionID, stepNum++, workspace).html);
+                    steps.push(step9(sectionID, stepNum++, workspace).html);
+                    steps.push(step10(sectionID, stepNum++).html);
+                    document.getElementById('transferSteps').innerHTML = steps.join('');
+                }
+                // Show the steps guide and update button visibility
+                document.getElementById('stepsGuide').style.display = anySection ? 'block' : 'none';
+                document.getElementById('generateBtn').style.display = anySection ? 'none' : 'inline-block';
+                document.getElementById('regenerateBtn').style.display = anySection ? 'inline-block' : 'none';
+                document.getElementById('downloadBtn').style.display = anySection ? 'inline-block' : 'none';
+                // Automatically open the first visible tab
+                const firstVisibleTab = document.querySelector('.tab button[style*="inline-block"]');
+                if (firstVisibleTab) {
+                    firstVisibleTab.click();
+                }
+                if (!anySection) {
+                    alert('Please select at least one section (Stow, Buffer, or Transfer) to generate steps.');
+                }
+            } catch (e) {
+                console.error('Error generating steps:', e);
+                alert('An error occurred while generating steps. Please check your input and try again.\n' + e);
             }
         }
 
@@ -1283,6 +1135,125 @@ ${step5Command}</code>
             transferTabBtn.style.display = 'none';
             
             generateSteps();
+        }
+
+        // Download configuration function
+        function downloadConfig() {
+            // Get mainline values for each section
+            const mainlineValues = toggleMainline();
+            
+            // Create configuration object
+            const config = {
+                workspaceTitle: document.getElementById('workspaceTitle').value,
+                sections: {}
+            };
+            
+            // Only add sections that are checked
+            if (document.getElementById('stowCheckbox').checked) {
+                config.sections.stow = {
+                    workcellId: document.getElementById('stowWorkcellId').value,
+                    eventId: document.getElementById('stowEventId').value,
+                    mainline: mainlineValues.stow,
+                    imageTag: document.getElementById('stowImageTagValue').value,
+                    vsConfigCR: document.getElementById('stowVsConfigPickValue').value,
+                    deployArtifactsCR: document.getElementById('stowDeployArtifactsPickValue').value,
+                    additionalPackages: getDynamicInputs('stowDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
+                };
+            }
+            
+            if (document.getElementById('bufferCheckbox').checked) {
+                config.sections.buffer = {
+                    workcellId: document.getElementById('bufferWorkcellId').value,
+                    eventId: document.getElementById('bufferEventId').value,
+                    mainline: document.getElementById('bufferMainline').checked,
+                    imageTag: document.getElementById('bufferImageTagValue').value,
+                    vsConfigCR: document.getElementById('bufferVsConfigPickValue').value,
+                    deployArtifactsCR: document.getElementById('bufferDeployArtifactsPickValue').value,
+                    additionalPackages: getDynamicInputs('bufferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
+                };
+            }
+            
+            if (document.getElementById('transferCheckbox').checked) {
+                config.sections.transfer = {
+                    workcellId: document.getElementById('transferWorkcellId').value,
+                    eventId: document.getElementById('transferEventId').value,
+                    mainline: document.getElementById('transferMainline').checked,
+                    imageTag: document.getElementById('transferImageTagValue').value,
+                    vsConfigCR: document.getElementById('transferVsConfigPickValue').value,
+                    deployArtifactsCR: document.getElementById('transferDeployArtifactsPickValue').value,
+                    additionalPackages: getDynamicInputs('transferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
+                };
+            }
+
+            // Convert to JSON string with pretty formatting
+            const configJson = JSON.stringify(config, null, 2);
+            
+            // Create blob and download
+            const blob = new Blob([configJson], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `config.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Show/hide section (stow, buffer, transfer) based on checkbox
+        function toggleSection(sectionId) {
+            const checkbox = document.getElementById(sectionId.replace('Section', 'Checkbox'));
+            const section = document.getElementById(sectionId);
+            if (checkbox && section) {
+                section.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+
+        // Bind checkbox change events to toggleSection for each section
+        document.getElementById('stowCheckbox').addEventListener('change', function() {
+            toggleSection('stowSection');
+        });
+        document.getElementById('bufferCheckbox').addEventListener('change', function() {
+            toggleSection('bufferSection');
+        });
+        document.getElementById('transferCheckbox').addEventListener('change', function() {
+            toggleSection('transferSection');
+        });
+        
+        // Show/hide input boxes for cherry-pick, image tag, etc.
+        function toggleInput(inputId) {
+            const inputBox = document.getElementById(inputId);
+            const checkboxId = inputId.replace('Input', '');
+            const checkbox = document.getElementById(checkboxId);
+            if (checkbox && inputBox) {
+                inputBox.style.display = checkbox.checked ? 'block' : 'none';
+            }
+        }
+
+        // Bind checkbox change events for image tag, Vulcan Stow Config, and Deployment Artifacts
+        ['stow', 'buffer', 'transfer'].forEach(section => {
+            document.getElementById(`${section}ImageTag`).addEventListener('change', function() {
+                toggleInput(`${section}ImageTagInput`);
+            });
+            document.getElementById(`${section}VsConfigPick`).addEventListener('change', function() {
+                toggleInput(`${section}VsConfigPickInput`);
+            });
+            document.getElementById(`${section}DeployArtifactsPick`).addEventListener('change', function() {
+                toggleInput(`${section}DeployArtifactsPickInput`);
+            });
+        });
+
+        // Mainline toggle: returns mainline/branch flags for each section
+        function toggleMainline() {
+            const stowMainlineCheckbox = document.getElementById('stowMainline');
+            const bufferMainlineCheckbox = document.getElementById('bufferMainline');
+            const transferMainlineCheckbox = document.getElementById('transferMainline');
+            const mainlineValues = {
+                stow: stowMainlineCheckbox && stowMainlineCheckbox.checked ? '--branch mainline' : '--latest',
+                buffer: bufferMainlineCheckbox && bufferMainlineCheckbox.checked ? '--branch mainline' : '--latest',
+                transfer: transferMainlineCheckbox && transferMainlineCheckbox.checked ? '--branch mainline' : '--latest'
+            };
+            return mainlineValues;
         }
     </script>
 </body>
