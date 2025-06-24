@@ -1255,6 +1255,44 @@ ${deployArtifacts}</code>
             };
             return mainlineValues;
         }
+
+        // Copy to clipboard function for code blocks
+        function copyToClipboard(elementId) {
+            const codeElem = document.getElementById(elementId);
+            if (!codeElem) return;
+            let text = codeElem.innerText || codeElem.textContent;
+            // Remove any HTML tags if present (for code blocks with <br> etc)
+            text = text.replace(/<br\s*\/?>/gi, '\n');
+            // Create a temporary textarea to copy text
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+            } catch (err) {
+                // fallback for modern browsers
+                navigator.clipboard && navigator.clipboard.writeText(text);
+            }
+            document.body.removeChild(textarea);
+
+            // Change button text to "Copied!" then revert
+            // Find the button that triggered this function
+            // (assumes only one copy button per step, which is true in this UI)
+            const codeBlock = codeElem.parentElement;
+            if (codeBlock) {
+                const btn = codeBlock.querySelector('.copy-btn');
+                if (btn) {
+                    const original = btn.textContent;
+                    btn.textContent = 'Copied!';
+                    btn.disabled = true;
+                    setTimeout(() => {
+                        btn.textContent = original;
+                        btn.disabled = false;
+                    }, 1500);
+                }
+            }
+        }
     </script>
 </body>
 </html>
