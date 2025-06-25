@@ -689,7 +689,8 @@ brazil ws --use -p VulcanStowConfig -p ${artifact} ${mainlineValue}</code>
         }
         function step2(section, stepNum, packageNames) {
             let step2Packages = packageNames.length > 0 
-                'brazil ws --use' + packageNames.map(pkg => `-p ${pkg}`).join(' ');
+                ?'brazil ws --use' + packageNames.map(pkg => `-p ${pkg}`).join(' ')
+                :'';
             return {
                 html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(2)}
 <code id=\"${section}Step${stepNum}\">${step2Packages}</code>
