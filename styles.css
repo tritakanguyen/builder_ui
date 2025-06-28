@@ -1,0 +1,310 @@
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+h1 {
+    margin-top: 0px;
+    color: #333;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+input[type="text"], select, textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.input-box {
+    margin-top: 10px;
+    padding: 10px;
+    display: none;
+    background-color: #e9f7fe;
+    border-radius: 5px;
+}
+.steps-container {
+    margin-top: 30px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    display: none;
+}
+.step {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: white;
+    border-radius: 4px;
+    border-left: 4px solid #4CAF50;
+    position: relative;
+}
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+button:hover {
+    background-color: #45a049;
+}
+button.update {
+    background-color: #888;
+}
+button.update:hover {
+    background-color: #777;
+}
+button.download {
+    background-color: #007bff;
+    font-size: 12px;
+    margin: 0px;
+    padding: 4px;
+    vertical-align: center;
+}
+button.download:hover {
+    background-color: #0056b3;
+}
+code {
+    display: block;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-family: monospace;
+    margin-top: 5px;
+}
+.checkbox-container {
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+/*a styles*/
+a {
+    text-decoration: none;
+}
+/* Tooltip styles */
+.tooltip-btn {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    margin-left: 5px;
+    cursor: pointer;
+    position: relative;
+}
+.tooltip-content {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    top: -5px;
+    left: 125%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-weight: normal;
+    font-size: 12px;
+}
+.tooltip-btn:hover .tooltip-content {
+    visibility: visible;
+    opacity: 1;
+}
+/* Copy button styles */
+.copy-btn {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 0;
+}
+.copy-btn:hover {
+    background-color: #0056b3;
+}
+.tab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+}
+.tab button {
+    background-color: #45a049;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 15px;
+    transition: background-color 0.3s, transform 0.2s;
+    font-size: 14px;
+    width: 25%;
+}
+.tab button:hover {
+    background-color: #33d859;
+    transform: scale(1.05);
+}
+.tab button.active {
+    background-color: #33d859;
+}
+.tabcontent {
+    display: none;
+    padding: 6px 12px;
+    border: 1px solid #ccc;
+    border-top: none;
+}
+/* Troubleshooting Panel Styles */
+.troubleshoot-panel {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 1000;
+    height: 100vh;
+}
+.troubleshoot-btn {
+    background-color: #888;
+    color: white;
+    padding: 0;
+    left: 0px;
+    top: 10px;
+    border: none;
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s;
+}
+.close-troubleshoot {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    background-color: rgba(136, 136, 136, 0.4);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 25px;
+    height: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+.troubleshoot-content {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 16%;
+    height: 100vh;
+    background-color: white;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    padding: 10px;
+    display: none;
+    overflow-y: auto;
+}
+.troubleshoot-content.open {
+    display: block;
+}
+.troubleshoot-content h4 {
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+.version-text {
+    position: fixed;
+    left: 10px;
+    bottom: 10px;
+    font-size: 8px;
+    margin: 0;
+    z-index: 1001;
+}
+/*Build tracking styles*/
+.build-tracking {
+    color: #28a745;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+.build-tracking:hover {
+    background-color: #33d859;
+    color: white;
+    text-decoration: none;
+}
+.reset {
+    position: fixed;
+    right: 10px;
+    bottom: 10px;
+    font-size: 12px;
+    background-color: #888;
+    border-radius: 100%;
+    z-index: 1001;
+    margin: 0;
+}
+/* Custom tooltip for checkboxes */
+.checkbox-label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+.checkbox-label:hover .checkbox-tooltip {
+    visibility: visible;
+    opacity: 1;
+}
+.checkbox-tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: beige;
+    color: black;
+    text-align: center;
+    padding: 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    font-size: 12px;
+    min-width: 200px;
+    max-width: 300px;
+}
