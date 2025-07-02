@@ -276,7 +276,7 @@
             position: fixed;
             left: 10px;
             bottom: 10px;
-            font-size: 8px;
+            font-size: 15px;
             margin: 0;
             z-index: 1001;
         }
@@ -352,6 +352,9 @@
                 <p>Failed to run Brazil after install Brazil<br>
                 Solution: run command below replace xxxxx with any number between 40000-60000</p>
                 <code>brazil prefs --key packagecache.port --value xxxxx --global</code>
+                <p>If you get  java runtime error fault when running brazil-build<br>Solution:</p>
+                <code>who -u
+sudo kill &lt;PID get it from who command&gt;</code>
                 <p>How to drop a CR in any package<br>
                 Get &lt;CR hash&gt; at<code>code.amazon.com</code>
                 Then do<code>git rebase -i &lt;CR hash&gt;</code>
@@ -638,12 +641,12 @@
 
     <script>
         // Set the version text in the UI
-        const ver = "v6.0";
+        const ver = "v7.0";
         document.getElementById("version").innerHTML = ver;
 
         // Set build tracking links for Event ID fields
         document.addEventListener('DOMContentLoaded', function buildTracking () {    
-            const eventIdUrl = 'https://quip-amazon.com/mDNJApkofexx/Vulcan-Stow-Daily-QA-Build-Tracking#temp:C:aIT0dcbc4e1e1544ad1be71c2d3c'
+            const eventIdUrl = 'https://amazon.enterprise.slack.com/lists/T016NEJQWE9/F0939EHTDHA?view_id=View09454SQB7W'
             const links = document.querySelectorAll('.build-tracking');
             links.forEach(link => {
                 link.href = eventIdUrl;
@@ -690,7 +693,7 @@ brazil ws --use -p VulcanStowConfig -p ${artifact} ${mainlineValue}</code>
         function step2(section, stepNum, packageNames) {
             let step2Packages = packageNames.length > 0 
                 ?'brazil ws --use' + packageNames.map(pkg => `-p ${pkg}`).join(' ')
-                :'';
+                : '';
             return {
                 html: `<div class=\"step\">${stepHeader(stepNum)}${toolTips(2)}
 <code id=\"${section}Step${stepNum}\">${step2Packages}</code>
@@ -1140,55 +1143,35 @@ ${deployArtifacts}</code>
 
         // Download configuration function
         function downloadConfig() {
-            // Get mainline values for each section
-            const mainlineValues = toggleMainline();
-            
-            // Create configuration object
-            const config = {
-                workspaceTitle: document.getElementById('workspaceTitle').value,
-                sections: {}
-            };
-            
-            // Only add sections that are checked
+            // Prepare config object to store generated steps for each section
+            const config = {};
+
+            // Helper to get the generated steps for a section as {stepN: [lines]}
+            function getSectionSteps(section) {
+                const stepsDiv = document.getElementById(`${section}Steps`);
+                if (!stepsDiv) return {};
+                const codeBlocks = stepsDiv.querySelectorAll('code');
+                const steps = {};
+                codeBlocks.forEach((code, idx) => {
+                    const lines = code.textContent.trim().split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                    steps[`step${idx + 1}`] = lines;
+                });
+                return steps;
+            }
+
             if (document.getElementById('stowCheckbox').checked) {
-                config.sections.stow = {
-                    workcellId: document.getElementById('stowWorkcellId').value,
-                    eventId: document.getElementById('stowEventId').value,
-                    mainline: mainlineValues.stow,
-                    imageTag: document.getElementById('stowImageTagValue').value,
-                    vsConfigCR: document.getElementById('stowVsConfigPickValue').value,
-                    deployArtifactsCR: document.getElementById('stowDeployArtifactsPickValue').value,
-                    additionalPackages: getDynamicInputs('stowDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
-                };
+                config.stow = getSectionSteps('stow');
             }
-            
             if (document.getElementById('bufferCheckbox').checked) {
-                config.sections.buffer = {
-                    workcellId: document.getElementById('bufferWorkcellId').value,
-                    eventId: document.getElementById('bufferEventId').value,
-                    mainline: document.getElementById('bufferMainline').checked,
-                    imageTag: document.getElementById('bufferImageTagValue').value,
-                    vsConfigCR: document.getElementById('bufferVsConfigPickValue').value,
-                    deployArtifactsCR: document.getElementById('bufferDeployArtifactsPickValue').value,
-                    additionalPackages: getDynamicInputs('bufferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
-                };
+                config.buffer = getSectionSteps('buffer');
             }
-            
             if (document.getElementById('transferCheckbox').checked) {
-                config.sections.transfer = {
-                    workcellId: document.getElementById('transferWorkcellId').value,
-                    eventId: document.getElementById('transferEventId').value,
-                    mainline: document.getElementById('transferMainline').checked,
-                    imageTag: document.getElementById('transferImageTagValue').value,
-                    vsConfigCR: document.getElementById('transferVsConfigPickValue').value,
-                    deployArtifactsCR: document.getElementById('transferDeployArtifactsPickValue').value,
-                    additionalPackages: getDynamicInputs('transferDynamicInputs').packageNames.map(pkg => `-p ${pkg}`)
-                };
+                config.transfer = getSectionSteps('transfer');
             }
 
             // Convert to JSON string with pretty formatting
             const configJson = JSON.stringify(config, null, 2);
-            
+
             // Create blob and download
             const blob = new Blob([configJson], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1255,44 +1238,6 @@ ${deployArtifacts}</code>
                 transfer: transferMainlineCheckbox && transferMainlineCheckbox.checked ? '--branch mainline' : '--latest'
             };
             return mainlineValues;
-        }
-
-        // Copy to clipboard function for code blocks
-        function copyToClipboard(elementId) {
-            const codeElem = document.getElementById(elementId);
-            if (!codeElem) return;
-            let text = codeElem.innerText || codeElem.textContent;
-            // Remove any HTML tags if present (for code blocks with <br> etc)
-            text = text.replace(/<br\s*\/?>/gi, '\n');
-            // Create a temporary textarea to copy text
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            document.body.appendChild(textarea);
-            textarea.select();
-            try {
-                document.execCommand('copy');
-            } catch (err) {
-                // fallback for modern browsers
-                navigator.clipboard && navigator.clipboard.writeText(text);
-            }
-            document.body.removeChild(textarea);
-
-            // Change button text to "Copied!" then revert
-            // Find the button that triggered this function
-            // (assumes only one copy button per step, which is true in this UI)
-            const codeBlock = codeElem.parentElement;
-            if (codeBlock) {
-                const btn = codeBlock.querySelector('.copy-btn');
-                if (btn) {
-                    const original = btn.textContent;
-                    btn.textContent = 'Copied!';
-                    btn.disabled = true;
-                    setTimeout(() => {
-                        btn.textContent = original;
-                        btn.disabled = false;
-                    }, 1500);
-                }
-            }
         }
     </script>
 </body>
