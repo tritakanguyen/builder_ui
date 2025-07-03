@@ -289,7 +289,7 @@
         }
 
         .build-tracking:hover {
-            background-color: #33d859;
+            background-color: #2bee58;
             color: white;
             text-decoration: none;
         }
@@ -335,6 +335,115 @@
             font-size: 12px;
             min-width: 200px;
             max-width: 300px;
+        }
+
+        /* Session Table Sidebar */
+        .session-sidebar {
+            position: fixed;
+            top: 60px;
+            right: 0px;
+            width: 17%;
+            height: auto;
+            background: #fff;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+            z-index: 1200;
+            font-size: 12px;
+            border-radius: 10px;
+            margin-top: 0;
+            padding: 0;
+            overflow: visible;
+        }
+        .session-sidebar .widget-content {
+            display: block;
+            width: 100%;
+            min-height: 120px;
+            max-height: 60vh;
+            height: 50vh;
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+            position: static;
+            padding: 10px 2px 6px 6px;
+            box-sizing: border-box;
+        }
+        .session-sidebar h3 {
+            margin-top: 0;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .session-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            table-layout: fixed;
+        }
+        .session-table th, .session-table td {
+            border-bottom: 1px solid #eee;
+            padding: 3px 2px;
+            text-align: left;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            white-space: normal;
+        }
+        .session-table th {
+            background: #f5f5f5;
+            font-size: 11px;
+        }
+        .session-table th:nth-child(1),
+        .session-table td:nth-child(1) {
+            width: 40%;
+        }
+        .session-table th:nth-child(2),
+        .session-table td:nth-child(2) {
+            width: 40%;
+        }
+        .session-table th:nth-child(3),
+        .session-table td:nth-child(3) {
+            width: 20%;
+        }
+        /* Prevent table from resizing on new rows */
+        .session-table, .session-table thead, .session-table tbody, .session-table tr, .session-table th, .session-table td {
+            box-sizing: border-box;
+        }
+        .session-link {
+            color: #007bff;
+            cursor: pointer;
+            text-decoration: underline;
+            background: none;
+            border: none;
+            padding: 0;
+            font-size: 11px;
+            word-break: break-all;
+        }
+        .session-delete-btn {
+            background: #f44336;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        .save-session-btn {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            float: right;
+        }
+        .save-session-btn:hover {
+            background: #0056b3;
+        }
+        @media (max-width: 1100px) {
+            .session-sidebar {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -638,6 +747,27 @@ sudo kill &lt;PID get it from who command&gt;</code>
     <p class="version-text" id="version"></p>
 <!-- Version     -->
     <p class="version-text" id="version"></p>
+
+    <!-- Session Table Sidebar Widget -->
+    <div class="session-sidebar" id="sessionSidebar">
+        <!-- Remove widget-toggle button -->
+        <div class="widget-content" id="sessionWidgetContent">
+            <h3>Saved Sessions</h3>
+            <table class="session-table" id="sessionTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Timestamp</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="sessionTableBody">
+                    <!-- Sessions will be populated here -->
+                </tbody>
+            </table>
+            <button class="save-session-btn" id="saveSessionBtn" onclick="saveSession()" style="float:none;display:block;width:100%;margin:10px 0 0 0;">Save Session</button>
+        </div>
+    </div>
 
     <script>
         // Set the version text in the UI
@@ -1245,9 +1375,7 @@ ${deployArtifacts}</code>
             const codeElem = document.getElementById(elementId);
             if (!codeElem) return;
             let text = codeElem.innerText || codeElem.textContent;
-            // Remove any HTML tags if present (for code blocks with <br> etc)
             text = text.replace(/<br\s*\/?>/gi, '\n');
-            // Create a temporary textarea to copy text
             const textarea = document.createElement('textarea');
             textarea.value = text;
             document.body.appendChild(textarea);
@@ -1274,6 +1402,200 @@ ${deployArtifacts}</code>
                 }
             }
         }
+
+        // --- Session Table Logic ---
+
+        // Utility: get all sessions from localStorage
+        function getSessions() {
+            const sessions = localStorage.getItem('ws_sessions');
+            return sessions ? JSON.parse(sessions) : [];
+        }
+
+        // Utility: save all sessions to localStorage
+        function setSessions(sessions) {
+            localStorage.setItem('ws_sessions', JSON.stringify(sessions));
+        }
+
+        // Save current session
+        function saveSession() {
+            // Gather form data
+            const testTitle = document.getElementById('testTitle').value || '[testTitle]';
+            const testDate = document.getElementById('testDate').value || '[date]';
+            const workspaceTitle = document.getElementById('workspaceTitle').value || '';
+            const timestamp = new Date().toLocaleString();
+            // Save all form fields and generated steps
+            const formData = {
+                testTitle,
+                testDate,
+                workspaceTitle,
+                stow: getSectionFormData('stow'),
+                buffer: getSectionFormData('buffer'),
+                transfer: getSectionFormData('transfer'),
+                steps: {
+                    stow: document.getElementById('stowSteps').innerHTML,
+                    buffer: document.getElementById('bufferSteps').innerHTML,
+                    transfer: document.getElementById('transferSteps').innerHTML
+                }
+            };
+            // Use a unique id for session
+            const sessionId = `${testTitle}_${Date.now()}`;
+            const sessions = getSessions();
+            sessions.unshift({
+                id: sessionId,
+                name: testTitle,
+                timestamp,
+                data: formData
+            });
+            setSessions(sessions);
+            renderSessionTable();
+        }
+
+        // Get all form values for a section
+        function getSectionFormData(section) {
+            return {
+                checked: document.getElementById(`${section}Checkbox`).checked,
+                workcellId: document.getElementById(`${section}WorkcellId`).value,
+                eventId: document.getElementById(`${section}EventId`).value,
+                mainline: document.getElementById(`${section}Mainline`).checked,
+                imageTag: document.getElementById(`${section}ImageTag`).checked,
+                imageTagValue: document.getElementById(`${section}ImageTagValue`).value,
+                cherryPick: document.getElementById(`${section}CherryPick`).checked,
+                vsConfigPick: document.getElementById(`${section}VsConfigPick`).checked,
+                vsConfigPickValue: document.getElementById(`${section}VsConfigPickValue`).value,
+                deployArtifactsPick: document.getElementById(`${section}DeployArtifactsPick`).checked,
+                deployArtifactsPickValue: document.getElementById(`${section}DeployArtifactsPickValue`).value,
+                // Dynamic cherry-pick packages
+                dynamicInputs: (() => {
+                    const arr = [];
+                    const inputGroups = document.querySelectorAll(`#${section}DynamicInputs .dynamic-input-group`);
+                    inputGroups.forEach(group => {
+                        arr.push({
+                            packageName: group.querySelector('input[type="text"]').value,
+                            gitCommand: group.querySelector('textarea').value
+                        });
+                    });
+                    return arr;
+                })()
+            };
+        }
+
+        // Render session table
+        function renderSessionTable() {
+            const sessions = getSessions();
+            const tbody = document.getElementById('sessionTableBody');
+            tbody.innerHTML = '';
+            sessions.forEach(session => {
+                const tr = document.createElement('tr');
+                // Session name as clickable link
+                const tdName = document.createElement('td');
+                const link = document.createElement('button');
+                link.className = 'session-link';
+                link.textContent = session.name;
+                link.title = 'Open this session';
+                link.onclick = () => loadSession(session.id);
+                tdName.appendChild(link);
+                // Timestamp
+                const tdTime = document.createElement('td');
+                tdTime.textContent = session.timestamp;
+                // Delete button
+                const tdDel = document.createElement('td');
+                const delBtn = document.createElement('button');
+                delBtn.className = 'session-delete-btn';
+                delBtn.textContent = 'Delete';
+                delBtn.onclick = () => deleteSession(session.id);
+                tdDel.appendChild(delBtn);
+
+                tr.appendChild(tdName);
+                tr.appendChild(tdTime);
+                tr.appendChild(tdDel);
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load session by id
+        function loadSession(sessionId) {
+            const sessions = getSessions();
+            const session = sessions.find(s => s.id === sessionId);
+            if (!session) return;
+            const d = session.data;
+            // Restore general fields
+            document.getElementById('testTitle').value = d.testTitle;
+            document.getElementById('testDate').value = d.testDate;
+            document.getElementById('workspaceTitle').value = d.workspaceTitle;
+            // Restore each section
+            ['stow', 'buffer', 'transfer'].forEach(section => {
+                const s = d[section];
+                document.getElementById(`${section}Checkbox`).checked = !!s.checked;
+                toggleSection(`${section}Section`);
+                document.getElementById(`${section}WorkcellId`).value = s.workcellId || '';
+                document.getElementById(`${section}EventId`).value = s.eventId || '';
+                document.getElementById(`${section}Mainline`).checked = !!s.mainline;
+                document.getElementById(`${section}ImageTag`).checked = !!s.imageTag;
+                document.getElementById(`${section}ImageTagValue`).value = s.imageTagValue || '';
+                document.getElementById(`${section}CherryPick`).checked = !!s.cherryPick;
+                document.getElementById(`${section}VsConfigPick`).checked = !!s.vsConfigPick;
+                document.getElementById(`${section}VsConfigPickValue`).value = s.vsConfigPickValue || '';
+                document.getElementById(`${section}DeployArtifactsPick`).checked = !!s.deployArtifactsPick;
+                document.getElementById(`${section}DeployArtifactsPickValue`).value = s.deployArtifactsPickValue || '';
+                // Show/hide input boxes
+                toggleInput(`${section}ImageTagInput`);
+                toggleInput(`${section}VsConfigPickInput`);
+                toggleInput(`${section}DeployArtifactsPickInput`);
+                // Cherry-pick section
+                if (document.getElementById(`${section}CherryPick`).checked) {
+                    document.getElementById(`${section}CherryPickSection`).style.display = 'block';
+                    document.getElementById(`${section}AddBtn`).style.display = 'inline-block';
+                } else {
+                    document.getElementById(`${section}CherryPickSection`).style.display = 'none';
+                    document.getElementById(`${section}AddBtn`).style.display = 'none';
+                }
+                // Clear dynamic inputs
+                const dyn = document.getElementById(`${section}DynamicInputs`);
+                dyn.innerHTML = '';
+                // Restore dynamic cherry-pick packages
+                if (s.dynamicInputs && s.dynamicInputs.length) {
+                    s.dynamicInputs.forEach(input => {
+                        const inputGroup = document.createElement('div');
+                        inputGroup.className = 'form-group dynamic-input-group';
+                        inputGroup.innerHTML = `
+                            <label>Enter Package Name:</label>
+                            <input type="text" placeholder="Beware case sensitive" value="${input.packageName || ''}">
+                            <label>Cherry Pick Command:</label>
+                            <textarea placeholder="Paste Cherry Pick here">${input.gitCommand || ''}</textarea>
+                            <button class="delete-btn" onclick="deleteDynamicInput(this)" style="background-color: #f44336; color: white; border: none; border-radius: 4px; padding: 3px 8px; font-size: 12px; cursor: pointer;">Delete</button>
+                        `;
+                        dyn.appendChild(inputGroup);
+                    });
+                }
+            });
+            // Restore generated steps
+            document.getElementById('stowSteps').innerHTML = d.steps.stow || '';
+            document.getElementById('bufferSteps').innerHTML = d.steps.buffer || '';
+            document.getElementById('transferSteps').innerHTML = d.steps.transfer || '';
+            // Show steps guide if any section is checked
+            const anySection = ['stow', 'buffer', 'transfer'].some(section => d[section].checked);
+            document.getElementById('stepsGuide').style.display = anySection ? 'block' : 'none';
+            document.getElementById('generateBtn').style.display = anySection ? 'none' : 'inline-block';
+            document.getElementById('regenerateBtn').style.display = anySection ? 'inline-block' : 'none';
+            document.getElementById('downloadBtn').style.display = anySection ? 'inline-block' : 'none';
+            // Open the first visible tab
+           
+            setTimeout(() => {
+                const firstVisibleTab = document.querySelector('.tab button[style*="inline-block"]');
+                if (firstVisibleTab) firstVisibleTab.click();
+            }, 100);
+        }
+
+        // Delete session by id
+        function deleteSession(sessionId) {
+            let sessions = getSessions();
+            sessions = sessions.filter(s => s.id !== sessionId);
+            setSessions(sessions);
+            renderSessionTable();
+        }
+
+        // Render session table on page load
+        document.addEventListener('DOMContentLoaded', renderSessionTable);
     </script>
 </body>
 </html>
