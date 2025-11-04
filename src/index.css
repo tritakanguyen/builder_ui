@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-200 font-mono;
+  }
+}
+
+@layer components {
+  .step {
+    @apply mb-4 p-4 bg-slate-900 border-l-4 border-cyan-500 rounded-r shadow-lg will-change-transform;
+  }
+  
+  .step code {
+    @apply block mt-2 p-3 bg-slate-950 border border-slate-800 rounded text-cyan-400 text-sm whitespace-pre-wrap font-mono select-text;
+  }
+  
+  .btn-primary {
+    @apply bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm rounded transition-colors duration-200 shadow-md hover:shadow-cyan-500/50;
+  }
+  
+  .btn-secondary {
+    @apply bg-slate-700 hover:bg-slate-600 text-slate-200 px-2 sm:px-3 py-1.5 sm:py-2 text-xs rounded transition-colors duration-200;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-500 text-white px-3 py-1 rounded transition-colors duration-200;
+  }
+  
+  .input-field {
+    @apply w-full bg-slate-900 border border-slate-700 rounded px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm text-slate-200 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 transition-colors;
+  }
+  
+  .card {
+    @apply bg-slate-900 border border-slate-800 rounded-lg shadow-xl;
+  }
+  
+  .tooltip-content {
+    @apply invisible opacity-0 absolute bottom-full left-0 mb-2 w-48 bg-slate-800 text-slate-200 text-xs rounded px-3 py-2 z-50 transition-opacity duration-200 border border-cyan-500/30;
+  }
+  
+  .tooltip-text:hover .tooltip-content {
+    @apply visible opacity-100;
+  }
+}

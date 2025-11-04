@@ -1,0 +1,152 @@
+auto build feature - temprary data bridge
+setup this host as a server so can use it as a temporary bridge for local script to read and execute the generated command
+
+server warm up when static site 
+
+let keyCount = 0;
+let keepAliveInterval;
+
+// Start keep-alive when first key created
+function startKeepAlive() {
+  if (!keepAliveInterval) {
+    keepAliveInterval = setInterval(() => {
+      fetch('https://your-server.onrender.com/ping').catch(() => {});
+    }, 600000); // 10 minutes
+  }
+}
+
+// Stop keep-alive when no keys remain
+function stopKeepAlive() {
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+    keepAliveInterval = null;
+  }
+}
+
+// Generate key and send data to server
+async function createKey(data) {
+  const response = await fetch('https://your-server.onrender.com/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data })
+  });
+  
+  const result = await response.json();
+  keyCount++;
+  startKeepAlive();
+  
+  // Auto-cleanup after 30 minutes
+  setTimeout(() => {
+    keyCount--;
+    if (keyCount === 0) stopKeepAlive();
+  }, 30 * 60 * 1000);
+  
+  return result.key;
+}
+
+// Initial ping on page load
+window.addEventListener('load', () => {
+  fetch('https://your-server.onrender.com/ping').catch(() => {});
+});
+
+// Cleanup on page close
+window.addEventListener('beforeunload', stopKeepAlive);
+</script>
+</body>
+</html>
+
+
+Server (Node.js/Express):
+javascript
+const express = require('express');
+const cors = require('cors');
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+const keys = new Map();
+
+function generateKey() {
+  return Math.random().toString(36).substring(2, 15);
+}
+
+function cleanupExpiredKeys() {
+  const now = Date.now();
+  for (const [key, value] of keys) {
+    if (now > value.expires) {
+      keys.delete(key);
+    }
+  }
+}
+
+function hasValidKeys() {
+  cleanupExpiredKeys();
+  return keys.size > 0;
+}
+
+// Create key endpoint
+app.post('/create', (req, res) => {
+  const key = generateKey();
+  keys.set(key, {
+    data: req.body.data,
+    expires: Date.now() + (30 * 60 * 1000) // 30 minutes
+  });
+  res.json({ key });
+});
+
+// Get data endpoint (for local script)
+app.get('/data/:key', (req, res) => {
+  const key = req.params.key;
+  const keyData = keys.get(key);
+  
+  if (!keyData || Date.now() > keyData.expires) {
+    return res.status(404).json({ error: 'Key not found or expired' });
+  }
+  
+  const data = keyData.data;
+  keys.delete(key); // Invalidate immediately after use
+  res.json({ data });
+});
+
+// Ping endpoint
+app.get('/ping', (req, res) => {
+  if (hasValidKeys()) {
+    res.status(200).send('ok');
+  } else {
+    res.status(204).send();
+  }
+});
+
+app.listen(process.env.PORT || 3000);
+
+
+// Local Script (Python):
+python
+import requests
+import time
+
+def get_data(key, server_url):
+    try:
+        response = requests.get(f'{server_url}/data/{key}')
+        if response.status_code == 200:
+            return response.json()['data']
+        else:
+            print(f"Key not found or expired: {response.status_code}")
+            return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
+# Usage
+server_url = 'https://your-server.onrender.com'
+key = 'abc123def456'  # Key from frontend
+data = get_data(key, server_url)
+if data:
+    print(f"Retrieved: {data}")
+
+
+
+
+
+
