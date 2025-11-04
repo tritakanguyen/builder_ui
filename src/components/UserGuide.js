@@ -61,7 +61,7 @@ function UserGuide(props) {
     {
       id: 'form-prefill',
       title: 'Try It: Prefill the Form',
-      description: 'Click the button below to automatically fill the form with example data including checkbox selections. This will help you understand how everything works!',
+      description: 'Click the button below to prefill the form with demo input. This will help you understand how everything works!',
       position: 'center',
       highlight: 'main-form',
       showPrefillButton: true
@@ -69,14 +69,14 @@ function UserGuide(props) {
     {
       id: 'sessions-save',
       title: 'Save Sessions After Setup',
-      description: 'Now that you have data filled in, you can save it as a session! Look for the "🤖 SAVE SESSION" button.',
+      description: 'Now that you have data filled in, you can save your form as a session at anytime with "🤖 SAVE SESSION" button!',
       position: 'top-right',
       highlight: 'session-panel'
     },
     {
       id: 'generate-button',
       title: 'Generate Steps Button',
-      description: 'Ready to generate? First try the demo button below, then scroll down to see the actual green "▶ GENERATE STEPS" button!',
+      description: 'Ready to generate? Click try the demo "▶ GENERATE STEPS" button!',
       position: 'center-bottom',
       highlight: 'action-buttons',
       showGenerateButton: true,
@@ -85,21 +85,21 @@ function UserGuide(props) {
     {
       id: 'workflow-steps',
       title: 'Individual Step Copy Buttons',
-      description: 'Each step has its own "📋 Copy" button so you can copy individual commands.',
+      description: 'Each step has its own "📋 Copy" button so you can quick copy step commands. Or you can double-click for highlighted and copy.',
       position: 'center',
       highlight: null
     },
     {
       id: 'auto-build',
-      title: 'Auto Build Button (⚙)',
-      description: 'After generating steps, look for the cyan ⚙ Auto Build button above the reset button. Click it to automatically build and execute your workflow!',
+      title: 'Auto Build Button (⚙) Developing...',
+      description: 'After generating steps, the cyan ⚙ Auto Build button will be generatedabove the reset button. Click it to copy autobuild string key to use with autobuild script!',
       position: 'bottom-right',
       highlight: 'auto-build-btn'
     },
     {
       id: 'launch-button',
       title: 'Launch Button (🚀)',
-      description: 'At the very last workflow step, you\'ll see the "🚀 Launch" button. This is your shortcut to the UWC terminal!',
+      description: 'The "🚀 Launch" button. This is your shortcut to the workcell\'s UWC terminal!',
       position: 'center',
       highlight: 'launch-btn',
       scrollToBottom: true
@@ -158,7 +158,7 @@ function UserGuide(props) {
         // Scroll to action buttons for generate-button step
         else if (nextStep.scrollToButton) {
           setTimeout(function() {
-            var actionButtons = document.querySelector('button[title="Generate workflow steps"]');
+            var actionButtons = document.querySelector('button[title="Demo Generate Steps"]');
             if (actionButtons) {
               actionButtons.scrollIntoView({
                 behavior: 'smooth',

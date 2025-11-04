@@ -1,7 +1,7 @@
 import requests
 import sys
 
-def get_data(key, server_url='http://localhost:3001'):
+def get_data(key, server_url='https://builder-api-bcr0.onrender.com'):
     try:
         response = requests.get(f'{server_url}/data/{key}')
         if response.status_code == 200:
