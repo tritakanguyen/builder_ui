@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 require('dotenv').config();
 
 module.exports = {
@@ -28,6 +29,9 @@ module.exports = {
     extensions: ['.js', '.jsx'],
   },
   plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    }),
     new webpack.DefinePlugin({
       'process.env': JSON.stringify({
         REACT_APP_AWS_ACCOUNT_ID: process.env.REACT_APP_AWS_ACCOUNT_ID,
