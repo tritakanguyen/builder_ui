@@ -5,6 +5,7 @@ var TroubleshootPanel = require('./components/TroubleshootPanel');
 var MainForm = require('./components/MainForm');
 var ActionButtons = require('./components/ActionButtons');
 var UserGuide = require('./components/UserGuide');
+var BuilderSetupScript = require('./components/BuilderSetupScript');
 
 function App() {
   var troubleshootOpenState = React.useState(false);
@@ -367,6 +368,8 @@ function App() {
       },
       '↻'
     ),
+    // Builder setup script button - fixed at bottom-left above user guide
+    React.createElement(BuilderSetupScript, { workcellId: workcellId }),
     // User guide toggle button - fixed at bottom-left
     React.createElement(
       'button',
