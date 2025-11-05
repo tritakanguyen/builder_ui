@@ -11,7 +11,7 @@ const keys = new Map();
 
 function generateKey(station, testTitle) {
   var random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return (station || 'XXXX') + '-' + (testTitle || 'test') + '-' + random;
+  return 'setup-' + random;
 }
 
 function cleanupExpiredKeys() {
