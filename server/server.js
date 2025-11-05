@@ -48,7 +48,8 @@ app.get('/data/:key', (req, res) => {
   
   const data = keyData.data;
   keys.delete(key);
-  res.json({ data });
+  res.setHeader('Content-Type', 'text/plain');
+  res.send(data);
 });
 
 app.get('/ping', (req, res) => {
