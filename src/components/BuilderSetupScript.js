@@ -16,8 +16,8 @@ function BuilderSetupScript(props) {
       '    f.write(aliases)\n\n' +
       'print("Setup complete! Run: source ~/.zshrc")\n';
     
-    apiClient.createKey(scriptContent, props.workcellId, 'setup-script').then(function(key) {
-      var apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+    apiClient.createKey('setup-script').then(function(key) {
+      var apiUrl = process.env.REACT_APP_API_URL;
       var downloadUrl = apiUrl + '/data/' + key;
       var wgetCommand = 'wget -O builder_setup.py ' + downloadUrl + ' && python3 builder_setup.py';
       

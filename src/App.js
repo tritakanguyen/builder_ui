@@ -109,6 +109,12 @@ function App() {
     console.log('stepsGenerated:', stepsGenerated, 'generatedKey:', generatedKey);
   }, [stepsGenerated, generatedKey]);
 
+  // Ping backend on mount to wake up server
+  React.useEffect(function() {
+    var apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+    fetch(apiUrl + '/ping').catch(function() {});
+  }, []);
+
   // Check for generated steps to show auto-build button
   React.useEffect(function() {
     var interval = setInterval(function() {
