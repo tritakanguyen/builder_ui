@@ -5,16 +5,20 @@ function BuilderSetupScript(props) {
   function copyWgetCommand() {
     var scriptContent = '#!/usr/bin/env python3\n' +
       'import subprocess\n' +
-      'import os\n\n' +
+      'import os\n' +
+      // 'import shutil\n\n' +
+      'home = os.path.expanduser("~")\n' +
       'print("Cloning VulcanStowDeploymentCommonConstructs package...")\n' +
-      'os.chdir(os.path.expanduser("~"))\n' +
-      'subprocess.run(["git", "clone", "ssh://git.amazon.com/pkg/VulcanStowDeploymentCommonConstructs/", "--branch", "atlas-test"], check=True)\n\n' +
+      'os.chdir(home)\n' +
+      'subprocess.run(["git", "clone", "--force", "ssh://git.amazon.com/pkg/VulcanStowDeploymentCommonConstructs/", "--branch", "atlas-test"], check=True)\n\n' +
       'print("Setting up aliases...")\n' +
       'aliases = "alias setup=\'~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/setup-test-folder.sh\'\\n" + \\\n' +
       '          "alias upload=\'~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/upload-test-folder.sh\'\\n"\n' +
-      'with open(os.path.expanduser("~/.zshrc"), "a") as f:\n' +
-      '    f.write(aliases)\n\n' +
-      'print("Setup complete! Run: source ~/.zshrc")\n';
+      'with open(os.path.join(home, ".zshrc"), "a") as f:\n' +
+      '    f.write(aliases)\n\n'  +
+      'print("Setup complete! Activate alias...")\n' +
+      'subprocess.run(["exec", "zsh"])\n'+
+      'subprocess.run(["rm", "-f", os.path.join(home, "builder_setup.py")])\n';
     
     apiClient.createKey(scriptContent, null, null).then(function(key) {
       var apiUrl = process.env.REACT_APP_API_URL;
