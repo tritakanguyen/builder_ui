@@ -8,10 +8,10 @@ var stationMap = {
   '0208': 'mi-0dcfcee097f637e8c',
   '0302': 'mi-010a9f3676f5105e8',
   '0303': 'mi-01c8330d0219aba73',
-  '0305': 'mi-null',
-  '0306': 'mi-null',
+  '0305': 'mi-019955dd271723f9f',
+  '0306': 'mi-0e1de732c54ddd066',
   '0307': 'mi-0d052aea3bac203e0',
-  '0308': 'mi-null'
+  '0308': 'mi-006b85b5e510bfddc'
 };
 
 function LaunchButton(props) {
