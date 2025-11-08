@@ -6,6 +6,8 @@ var MainForm = require('./components/MainForm');
 var ActionButtons = require('./components/ActionButtons');
 var UserGuide = require('./components/UserGuide');
 var BuilderSetupScript = require('./components/BuilderSetupScript');
+var LaunchWidget = require('./components/LaunchWidget');
+var NotificationBanner = require('./components/NotificationBanner');
 
 function App() {
   var troubleshootOpenState = React.useState(false);
@@ -59,6 +61,10 @@ function App() {
   var imageTagValue = imageTagValueState[0];
   var setImageTagValue = imageTagValueState[1];
 
+  var imageTagInputsState = React.useState([]);
+  var imageTagInputs = imageTagInputsState[0];
+  var setImageTagInputs = imageTagInputsState[1];
+
   var cherryPickState = React.useState(false);
   var cherryPick = cherryPickState[0];
   var setCherryPick = cherryPickState[1];
@@ -87,6 +93,7 @@ function App() {
     try {
       return JSON.parse(localStorage.getItem('builder_sessions') || '[]');
     } catch (e) {
+      console.error('Failed to load sessions from localStorage:', e);
       return [];
     }
   });
@@ -105,25 +112,46 @@ function App() {
   var generatedKey = generatedKeyState[0];
   var setGeneratedKey = generatedKeyState[1];
 
+  var notificationState = React.useState(null);
+  var notification = notificationState[0];
+  var setNotification = notificationState[1];
+
+  function showNotification(message, type) {
+    setNotification({ message: message, type: type });
+    setTimeout(function() {
+      setNotification(null);
+    }, 3000);
+  }
+
   React.useEffect(function() {
     console.log('stepsGenerated:', stepsGenerated, 'generatedKey:', generatedKey);
   }, [stepsGenerated, generatedKey]);
 
   // Ping backend on mount to wake up server
   React.useEffect(function() {
-    var apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-    fetch(apiUrl + '/ping').catch(function() {});
+    try {
+      var apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+      fetch(apiUrl + '/ping').catch(function(err) {
+        console.error('Failed to ping backend:', err);
+      });
+    } catch (e) {
+      console.error('Error in ping effect:', e);
+    }
   }, []);
 
   // Check for generated steps to show auto-build button
   React.useEffect(function() {
     var interval = setInterval(function() {
-      if (sections) {
-        var stepsContainer = document.getElementById(sections + 'Steps');
-        if (stepsContainer && stepsContainer.children.length > 0) {
-          setStepsGenerated(true);
-          clearInterval(interval);
+      try {
+        if (sections) {
+          var stepsContainer = document.getElementById(sections + 'Steps');
+          if (stepsContainer && stepsContainer.children.length > 0) {
+            setStepsGenerated(true);
+            clearInterval(interval);
+          }
         }
+      } catch (e) {
+        console.error('Error checking for generated steps:', e);
       }
     }, 500);
 
@@ -142,32 +170,39 @@ function App() {
 
   // Set default section based on workcellId
   React.useEffect(function() {
-    if (workcellId) {
-      var newSection = ['0202', '0205', '0302', '0305'].indexOf(workcellId) !== -1 ? 'induct' : 'stow';
-      if (newSection !== sections) {
-        setSections(newSection);
+    try {
+      if (workcellId) {
+        var newSection = ['0202', '0205', '0302', '0305'].indexOf(workcellId) !== -1 ? 'induct' : 'stow';
+        if (newSection !== sections) {
+          setSections(newSection);
+        }
       }
+    } catch (e) {
+      console.error('Error setting default section:', e);
     }
   }, [workcellId, sections]);
 
+  function formatTimestamp() {
+    var d = new Date();
+    var month = ('0' + (d.getMonth() + 1)).slice(-2);
+    var day = ('0' + d.getDate()).slice(-2);
+    var hours = ('0' + d.getHours()).slice(-2);
+    var minutes = ('0' + d.getMinutes()).slice(-2);
+    return month + '-' + day + '@' + hours + ':' + minutes;
+  }
+
   function handleSaveSession() {
     if (!testTitle.trim()) {
-      setFormWarning('Test Title is required to save a session.');
+      showNotification('Test Title is required to save a session.', 'warning');
       return;
     }
     
-    setFormWarning('');
+    console.log('Saving imageTagInputs:', imageTagInputs);
+    showNotification('Session saved successfully!', 'success');
     var newSession = {
       id: Date.now(),
       name: testTitle,
-      timestamp: (function() {
-        var d = new Date();
-        var month = ('0' + (d.getMonth() + 1)).slice(-2);
-        var day = ('0' + d.getDate()).slice(-2);
-        var hours = ('0' + d.getHours()).slice(-2);
-        var minutes = ('0' + d.getMinutes()).slice(-2);
-        return month + '-' + day + '@' + hours + ':' + minutes;
-      })(),
+      timestamp: formatTimestamp(),
       testDate: testDate,
       testTitle: testTitle,
       workcellId: workcellId,
@@ -175,6 +210,7 @@ function App() {
       sections: sections,
       imageTag: imageTag,
       imageTagValue: imageTagValue,
+      imageTagInputs: imageTagInputs,
       cherryPick: cherryPick,
       vsConfigPick: vsConfigPick,
       vsConfigPickValue: vsConfigPickValue,
@@ -184,20 +220,31 @@ function App() {
     };
     var updated = [newSession].concat(sessions).slice(0, 10);
     setSessions(updated);
-    localStorage.setItem('builder_sessions', JSON.stringify(updated));
+    try {
+      localStorage.setItem('builder_sessions', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to save session to localStorage:', e);
+      showNotification('Failed to save session', 'error');
+    }
   }
 
   function handleLoadSession(idx) {
     var s = sessions[idx];
     if (!s) return;
-    if (!window.confirm('Load this session? This will overwrite your current form data.')) return;
+    if (!window.confirm('Load this session? This will overwrite your current form data.')) {
+      return;
+    }
+    console.log('Loading imageTagInputs:', s.imageTagInputs);
     setTestDate(s.testDate);
     setTestTitle(s.testTitle);
     setWorkcellId(s.workcellId || '');
     setEventId(s.eventId || '');
     setSections(s.sections);
-    setImageTag(s.imageTag || false);
+    var hasImageTags = s.imageTagInputs && s.imageTagInputs.length > 0;
+    setImageTag(hasImageTags || s.imageTag || false);
     setImageTagValue(s.imageTagValue || '');
+    setImageTagInputs(s.imageTagInputs || []);
+    console.log('After setImageTagInputs, current state should update');
     setCherryPick(s.cherryPick || false);
     setVsConfigPick(s.vsConfigPick || false);
     setVsConfigPickValue(s.vsConfigPickValue || '');
@@ -212,11 +259,32 @@ function App() {
       return i !== idx;
     });
     setSessions(updated);
-    localStorage.setItem('builder_sessions', JSON.stringify(updated));
+    try {
+      localStorage.setItem('builder_sessions', JSON.stringify(updated));
+    } catch (e) {
+      console.error('Failed to delete session from localStorage:', e);
+      showNotification('Failed to delete session', 'error');
+    }
+  }
+
+  function fallbackCopyKey(key) {
+    try {
+      var textarea = document.createElement('textarea');
+      textarea.value = key;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      showNotification('Key copied: ' + key, 'success');
+    } catch (e) {
+      console.error('Fallback copy failed:', e);
+      showNotification('Failed to copy key', 'error');
+    }
   }
 
   function handleResetForm() {
     if (!window.confirm('Reset all form fields? This will clear all your current data.')) return;
+    showNotification('Form reset successfully!', 'success');
     setTestDate('');
     setTestTitle('');
     setWorkcellId('');
@@ -224,6 +292,7 @@ function App() {
     setSections('');
     setImageTag(false);
     setImageTagValue('');
+    setImageTagInputs([]);
     setCherryPick(false);
     setVsConfigPick(false);
     setVsConfigPickValue('');
@@ -287,6 +356,11 @@ function App() {
   return React.createElement(
     'div',
     { className: 'min-h-screen bg-slate-950 p-2 sm:p-4 lg:p-6' },
+    notification && React.createElement(NotificationBanner, {
+      message: notification.message,
+      type: notification.type,
+      onClose: function() { setNotification(null); }
+    }),
     React.createElement(TroubleshootPanel, {
       open: troubleshootOpen,
       onClose: function() { setTroubleshootOpen(false); }
@@ -308,7 +382,7 @@ function App() {
     !troubleshootOpen && React.createElement(
       'button',
       {
-        className: 'fixed left-2 top-2 sm:left-3 sm:top-3 z-[1200] bg-slate-800 text-cyan-400 rounded-lg w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center shadow-lg hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 transition-all text-xs sm:text-sm',
+        className: 'fixed left-2 top-2 sm:left-3 sm:top-3 z-[1200] bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-cyan-400 rounded-lg w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center shadow-lg shadow-slate-500/50 hover:shadow-cyan-500/70 border-2 border-slate-700 hover:border-cyan-500 transition-all text-xs sm:text-sm',
         title: 'Open Troubleshooting Guide',
         onClick: function() { setTroubleshootOpen(true); }
       },
@@ -317,7 +391,7 @@ function App() {
     !sessionSidebarOpen && React.createElement(
       'button',
       {
-        className: 'md:hidden fixed right-2 top-2 sm:right-3 sm:top-3 z-[1200] bg-slate-800 text-cyan-400 rounded-lg w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center shadow-lg hover:bg-slate-700 border border-slate-700 hover:border-cyan-500 transition-all text-xs sm:text-sm',
+        className: 'md:hidden fixed right-2 top-2 sm:right-3 sm:top-3 z-[1200] bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-cyan-400 rounded-lg w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center shadow-lg shadow-slate-500/50 hover:shadow-cyan-500/70 border-2 border-slate-700 hover:border-cyan-500 transition-all text-xs sm:text-sm',
         title: 'Open Sessions',
         onClick: function() { 
           setSessionSidebarOpen(true); 
@@ -346,20 +420,24 @@ function App() {
     stepsGenerated && generatedKey && React.createElement(
       'button',
       {
-        className: 'fixed right-2 bottom-14 sm:right-2.5 sm:bottom-16 z-[1300] bg-cyan-600 hover:bg-cyan-500 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg transition-all text-sm font-bold',
+        className: 'fixed right-2 bottom-14 sm:right-2.5 sm:bottom-16 z-[1300] bg-gradient-to-br from-cyan-600 to-cyan-800 hover:from-cyan-500 hover:to-cyan-700 border-2 border-cyan-400 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/70 transition-all text-sm font-bold',
         title: 'Key: ' + generatedKey + ' (Click to copy)',
         onClick: function() {
-          navigator.clipboard.writeText(generatedKey).then(function() {
-            alert('Key copied: ' + generatedKey);
-          }).catch(function() {
-            var textarea = document.createElement('textarea');
-            textarea.value = generatedKey;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-            alert('Key copied: ' + generatedKey);
-          });
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(generatedKey).then(function() {
+                showNotification('Key copied: ' + generatedKey, 'success');
+              }).catch(function(err) {
+                console.error('Clipboard write failed:', err);
+                fallbackCopyKey(generatedKey);
+              });
+            } else {
+              fallbackCopyKey(generatedKey);
+            }
+          } catch (e) {
+            console.error('Error copying key:', e);
+            fallbackCopyKey(generatedKey);
+          }
         }
       },
       '⚙'
@@ -368,19 +446,21 @@ function App() {
     React.createElement(
       'button',
       {
-        className: 'fixed right-2 bottom-2 sm:right-2.5 sm:bottom-2.5 z-[1300] bg-slate-600 hover:bg-slate-500 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg transition-all text-xl font-bold',
+        className: 'fixed right-2 bottom-2 sm:right-2.5 sm:bottom-2.5 z-[1300] bg-gradient-to-br from-slate-600 to-slate-800 hover:from-slate-500 hover:to-slate-700 border-2 border-slate-400 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg shadow-slate-500/50 hover:shadow-slate-400/70 transition-all text-xl font-bold',
         title: 'Reset Form',
         onClick: handleResetForm
       },
       '↻'
     ),
+    // Launch widget
+    React.createElement(LaunchWidget),
     // Builder setup script button - fixed at bottom-left above user guide
-    React.createElement(BuilderSetupScript, { workcellId: workcellId }),
+    React.createElement(BuilderSetupScript, { workcellId: workcellId, showNotification: showNotification }),
     // User guide toggle button - fixed at bottom-left
     React.createElement(
       'button',
       {
-        className: 'fixed left-2 bottom-2 sm:left-2.5 sm:bottom-2.5 z-[1300] bg-cyan-600 hover:bg-cyan-500 text-slate-950 rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg transition-all text-lg font-bold',
+        className: 'fixed left-2 bottom-2 sm:left-2.5 sm:bottom-2.5 z-[1300] bg-gradient-to-br from-cyan-600 to-cyan-800 hover:from-cyan-500 hover:to-cyan-700 border-2 border-cyan-400 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/70 transition-all text-lg font-bold',
         title: 'How to Use',
         onClick: function() { setUserGuideOpen(true); }
       },
@@ -414,6 +494,8 @@ function App() {
         setImageTag: setImageTag,
         imageTagValue: imageTagValue,
         setImageTagValue: setImageTagValue,
+        imageTagInputs: imageTagInputs,
+        setImageTagInputs: setImageTagInputs,
         cherryPick: cherryPick,
         setCherryPick: setCherryPick,
         vsConfigPick: vsConfigPick,
@@ -440,6 +522,7 @@ function App() {
         sections: sections,
         imageTag: imageTag,
         imageTagValue: imageTagValue,
+        imageTagInputs: imageTagInputs,
         cherryPick: cherryPick,
         dynamicInputs: dynamicInputs,
         eventId: eventId,
@@ -451,7 +534,8 @@ function App() {
         deployArtifactsPickValue: deployArtifactsPickValue,
         vsConfigPickValue: vsConfigPickValue,
         vsConfigPick: vsConfigPick,
-        setGeneratedKey: setGeneratedKey
+        setGeneratedKey: setGeneratedKey,
+        showNotification: showNotification
       }),
       React.createElement(StepsGuide, { activeSections: sections }),
       React.createElement(SessionSidebar, {

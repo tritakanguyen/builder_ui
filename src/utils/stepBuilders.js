@@ -31,6 +31,28 @@ function setupWorkspace(props) {
   );
 }
 
+// Helper to check if deploy artifacts value exists
+function hasDeployArtifacts(value) {
+  return value && value.trim() !== '';
+}
+
+// Helper to generate package commands
+function generatePackageCommands(dynamicInputs, workspaceTitle) {
+  var pkgs = dynamicInputs.filter(function(input) {
+    return input && input.packageName && input.packageName.trim();
+  });
+  var out = 'brazil ws --use ' + pkgs.map(function(input) {
+    return '-p ' + input.packageName.trim();
+  }).join(' ');
+  pkgs.forEach(function(input) {
+    out += '\ncd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/' + input.packageName.trim();
+    if (input.gitCommand && input.gitCommand.trim()) {
+      out += '\n' + input.gitCommand.trim();
+    }
+  });
+  return out;
+}
+
 // Cherry pick step content (reusable)
 function handleCRCommand(props) {
   var section = props.section;
@@ -47,25 +69,24 @@ function handleCRCommand(props) {
         React.createElement('code', null, 'cd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/VulcanStowConfig' + (vulcanstowconfigPickValue && vulcanstowconfigPickValue.trim() ? '\n' + vulcanstowconfigPickValue.trim() : ''))
       )
     ),
-    (deployArtifactsPickValue && deployArtifactsPickValue.trim() !== '') && (
+    hasDeployArtifacts(deployArtifactsPickValue) && (
       React.createElement('div', null,
         React.createElement('span', { style: { fontWeight: 'bold' } }, 'Deployment Artifacts cherry-pick command:'),
         React.createElement('code', null, 'cd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/' + getDeploymentArtifactsPackage(section) + '\n' + deployArtifactsPickValue)
       )
     ),
-    Array.isArray(dynamicInputs) && dynamicInputs.filter(input => input && input.packageName && input.packageName.trim()).length > 0 && (
+    Array.isArray(dynamicInputs) && dynamicInputs.filter(function(input) {
+      return input && input.packageName && input.packageName.trim();
+    }).length > 0 && (
       React.createElement('div', null,
         React.createElement('span', { style: { fontWeight: 'bold' } }, 'Added packages cherry-pick command:'),
-        React.createElement('code', null, (() => {
-          const pkgs = dynamicInputs.filter(input => input && input.packageName && input.packageName.trim());
-          let out = 'brazil ws --use ' + pkgs.map(input => `-p ${input.packageName.trim()}`).join(' ');
-          pkgs.forEach(input => {
-            out += '\ncd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/' + input.packageName.trim();
-            if (input.gitCommand && input.gitCommand.trim()) {
-              out += '\n' + input.gitCommand.trim();
-            }
-          });
-          return out;
+        React.createElement('code', null, (function() {
+          try {
+            return generatePackageCommands(dynamicInputs, workspaceTitle);
+          } catch (e) {
+            console.error('Error generating cherry-pick command:', e);
+            return 'Error generating command';
+          }
         })())
       )
     )
@@ -90,18 +111,36 @@ function navigateToDockerCompose(props, stepNumber) {
     React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
     'Image tag modification',
     React.createElement('code', null, getDockerComposePath(section, workspaceTitle))
+  // amazonq-ignore-next-line
   );
 }
 
 // Apply image tag step
 function manualHandleImageTag(props, stepNumber) {
-  var imageTagValue = props.imageTagValue;
+  var imageTagInputs = props.imageTagInputs || [];
+  var filteredTags = imageTagInputs.filter(function(tag) { return tag && tag.trim(); });
 
-  return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
-    React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
-    'Apply image tag shown in this step to the proper service',
-    React.createElement('code', null, 'Apply image tag:\n\n' + imageTagValue)
-  );
+  if (filteredTags.length === 0) {
+    return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
+      React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
+      // amazonq-ignore-next-line
+      'Apply image tag shown in this step to the proper service',
+      React.createElement('code', null, props.imageTagValue || '')
+    );
+  }
+
+  var elements = [React.createElement('strong', { key: 'title' }, 'Step ' + stepNumber + ': '), 'Apply image tag(s) shown below to the proper service'];
+  
+  filteredTags.forEach(function(tag, idx) {
+    elements.push(
+      React.createElement('div', { key: 'tag-' + idx, style: { marginTop: '8px' } },
+        React.createElement('span', { style: { fontWeight: 'bold', fontSize: '12px', color: '#67e8f9', display: 'block', marginBottom: '4px' } }, 'Image Tag ' + (idx + 1) + ':'),
+        React.createElement('code', null, tag.trim())
+      )
+    );
+  });
+
+  return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, elements);
 }
 
 // Build and deploy step

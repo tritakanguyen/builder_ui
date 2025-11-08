@@ -1,6 +1,14 @@
 var React = require('react');
 var apiClient = require('../utils/apiClient');
 
+function getButtonClassName(backendReady) {
+  var baseClass = 'fixed left-2 bottom-14 sm:left-2.5 sm:bottom-14 z-[1300] text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg transition-all text-lg font-bold ';
+  if (backendReady) {
+    return baseClass + 'bg-gradient-to-br from-purple-600 to-purple-800 hover:from-purple-500 hover:to-purple-700 border-2 border-purple-400 shadow-purple-500/50 hover:shadow-purple-400/70';
+  }
+  return baseClass + 'bg-gray-600 cursor-not-allowed border-2 border-gray-500';
+}
+
 function BuilderSetupScript(props) {
   var backendReadyState = React.useState(false);
   var backendReady = backendReadyState[0];
@@ -40,7 +48,7 @@ function BuilderSetupScript(props) {
       var wgetCommand = 'wget -O builder_setup.py ' + downloadUrl + ' && python3 builder_setup.py';
       
       navigator.clipboard.writeText(wgetCommand).then(function() {
-        alert('Copied to clipboard: ' + wgetCommand);
+        props.showNotification('Wget command copied to clipboard!', 'success');
       }).catch(function() {
         var textarea = document.createElement('textarea');
         textarea.value = wgetCommand;
@@ -48,10 +56,10 @@ function BuilderSetupScript(props) {
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
-        alert('Copied to clipboard: ' + wgetCommand);
+        props.showNotification('Wget command copied to clipboard!', 'success');
       });
     }).catch(function(err) {
-      alert('Failed to generate script: ' + err.message);
+      props.showNotification('Failed to generate script: ' + err.message, 'error');
     });
   }
 
@@ -60,8 +68,8 @@ function BuilderSetupScript(props) {
     {
       onClick: copyWgetCommand,
       disabled: !backendReady,
-      className: 'fixed left-2 bottom-14 sm:left-2.5 sm:bottom-14 z-[1300] ' + (backendReady ? 'bg-purple-600 hover:bg-purple-500' : 'bg-gray-600 cursor-not-allowed') + ' text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg transition-all text-lg font-bold',
-      title: backendReady ? 'Copy wget command to clipboard' : 'Waiting for backend...'
+      className: getButtonClassName(backendReady),
+      title: backendReady ? 'Installation Script' : 'Waiting for backend...'
     },
     '⬇️'
   );

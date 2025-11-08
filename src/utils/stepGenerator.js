@@ -19,6 +19,7 @@ function generateSteps(props) {
     section: sections,
     workspaceTitle: workspaceTitle,
     imageTagValue: imageTagValue,
+    imageTagInputs: props.imageTagInputs || [],
     dynamicInputs: dynamicInputs,
     eventId: props.eventId,
     testDate: props.testDate,

@@ -43,10 +43,10 @@ function LaunchButton(props) {
     'button',
     {
       type: 'button',
-      className: 'bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-semibold px-4 py-2 rounded mt-2 transition-all',
+      className: 'bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-500 hover:to-cyan-600 text-white font-bold px-3 py-2 rounded-lg border border-cyan-400 shadow-md hover:shadow-lg transition-all text-sm',
       onClick: handleClick
     },
-    '🚀 Launch ' + workcellId
+    '🚀 ' + workcellId
   );
 }
 

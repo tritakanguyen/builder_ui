@@ -16,6 +16,23 @@ function MainForm(props) {
   var setImageTag = props.setImageTag;
   var imageTagValue = props.imageTagValue;
   var setImageTagValue = props.setImageTagValue;
+  var imageTagInputs = props.imageTagInputs || [];
+  var setImageTagInputs = props.setImageTagInputs;
+
+  function addImageTagInput() {
+    setImageTagInputs(imageTagInputs.concat(['']));
+  }
+
+  function removeImageTagInput(idx) {
+    setImageTagInputs(imageTagInputs.filter(function(_, i) { return i !== idx; }));
+  }
+
+  function handleImageTagInputChange(idx, value) {
+    var newInputs = imageTagInputs.map(function(input, i) {
+      return i === idx ? value : input;
+    });
+    setImageTagInputs(newInputs);
+  }
   var cherryPick = props.cherryPick;
   var setCherryPick = props.setCherryPick;
   var vsConfigPick = props.vsConfigPick;
@@ -39,13 +56,13 @@ function MainForm(props) {
 
   function handleDynamicInputChange(idx, field, value) {
     var newInputs = dynamicInputs.map(function(input, i) {
-      if (i === idx) {
-        var updated = {};
-        for (var k in input) updated[k] = input[k];
-        updated[field] = value;
-        return updated;
+      if (i !== idx) return input;
+      var updated = {};
+      for (var k in input) {
+        updated[k] = input[k];
       }
-      return input;
+      updated[field] = value;
+      return updated;
     });
     setDynamicInputs(newInputs);
   }
@@ -204,7 +221,12 @@ function MainForm(props) {
           React.createElement('input', {
             type: 'checkbox',
             checked: imageTag,
-            onChange: function(e) { setImageTag(e.target.checked); }
+            onChange: function(e) {
+              setImageTag(e.target.checked);
+              if (e.target.checked && imageTagInputs.length === 0) {
+                setImageTagInputs(['']);
+              }
+            }
           }),
           React.createElement(
             'span',
@@ -219,18 +241,46 @@ function MainForm(props) {
         ),
         imageTag && React.createElement(
           'div',
-          { className: 'mt-2 p-2 bg-slate-900 border border-slate-700 rounded' },
+          { className: 'mt-2' },
+          imageTagInputs.map(function(tag, idx) {
+            return React.createElement(
+              'div',
+              { key: idx, className: 'p-2 bg-slate-900 border border-slate-700 rounded mb-2' },
+              React.createElement(
+                'div',
+                { className: 'flex items-center gap-2 mb-1' },
+                React.createElement(
+                  'label',
+                  { className: 'font-semibold text-cyan-400 text-xs uppercase' },
+                  'Image Tag ' + (idx + 1)
+                ),
+                React.createElement(
+                  'button',
+                  {
+                    type: 'button',
+                    className: 'text-red-500 hover:text-red-400 font-bold text-lg',
+                    onClick: function() { removeImageTagInput(idx); }
+                  },
+                  '✕'
+                )
+              ),
+              React.createElement('textarea', {
+                className: 'input-field',
+                value: tag,
+                onChange: function(e) { handleImageTagInputChange(idx, e.target.value); },
+                placeholder: 'Enter image tag'
+              })
+            );
+          }),
           React.createElement(
-            'label',
-            { className: 'block font-semibold mb-1 text-cyan-400 text-xs uppercase' },
-            'Image Tag'
-          ),
-          React.createElement('textarea', {
-            className: 'input-field',
-            value: imageTagValue,
-            onChange: function(e) { setImageTagValue(e.target.value); },
-            placeholder: 'Enter image tag'
-          })
+            'button',
+            {
+              type: 'button',
+              className: 'btn-secondary text-xs mt-2 mb-2',
+              onClick: addImageTagInput
+            },
+            '+ Add Image Tag'
+          )
         )
       ),
       React.createElement(
