@@ -31,14 +31,19 @@ def get_data(key, server_url=None):
     if server_url is None:
         server_url = get_server_url()
     try:
-        response = requests.get(f'{server_url}/data/{key}')
+        url = f'{server_url}/data/{key}'
+        logging.info(f"Fetching data from: {url}")
+        response = requests.get(url)
         if response.status_code == 200:
             return json.loads(response.text)
+        elif response.status_code == 404:
+            logging.error(f"Key '{key}' not found or expired. Keys expire after 30 minutes or are consumed after first use.")
+            return None
         else:
-            print(f"Error: Key not found or expired (status {response.status_code})")
+            logging.error(f"Server returned status {response.status_code}: {response.text}")
             return None
     except Exception as e:
-        print(f"Error: {e}")
+        logging.error(f"Failed to connect to server: {e}")
         return None
 
 def execute_commands(commands, key, start_index=0):
