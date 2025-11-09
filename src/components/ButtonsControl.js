@@ -63,11 +63,17 @@ function ButtonsControl(props) {
     stepsRenderer.showStepsGuide();
     window.build_string = stepsRenderer.collectCommands(workcellType);
     
-    // Generate simple key
+    // Create key on server
     if (window.build_string) {
-      var randomChars = Math.random().toString(36).substring(2, 6);
-      var simpleKey = 'key-' + randomChars;
-      setGeneratedKey(simpleKey);
+      apiClient.createKey(window.build_string, workcellId, testTitle)
+        .then(function(key) {
+          if (key) {
+            setGeneratedKey(key);
+          }
+        })
+        .catch(function(err) {
+          console.error('Failed to create key:', err);
+        });
     }
   }
 }
