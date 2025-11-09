@@ -5,7 +5,7 @@ const app = express();
 app.use(cors({
   origin: process.env.FRONTEND_URL || '*'
 }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 const keys = new Map();
 
@@ -66,6 +66,25 @@ app.get('/ping', (req, res) => {
   } else {
     res.status(204).send();
   }
+});
+
+const scripts = new Map();
+
+app.post('/script', (req, res) => {
+  const { content } = req.body;
+  const id = Math.random().toString(36).substring(2, 15);
+  scripts.set(id, { content, expires: Date.now() + (5 * 60 * 1000) });
+  res.json({ id });
+});
+
+app.get('/script/:id', (req, res) => {
+  const script = scripts.get(req.params.id);
+  if (!script || Date.now() > script.expires) {
+    return res.status(404).send('Script not found or expired');
+  }
+  scripts.delete(req.params.id);
+  res.setHeader('Content-Type', 'text/x-python');
+  res.send(script.content);
 });
 
 const PORT = process.env.PORT || 3001;

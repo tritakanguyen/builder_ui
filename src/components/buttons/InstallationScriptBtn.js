@@ -3,39 +3,26 @@ var React = require('react');
 function InstallationScriptBtn(props) {
 
   function downloadInstallScript() {
-    var scriptContent = '#!/usr/bin/env python3\n' +
-      'import subprocess\n' +
-      'import os\n\n' +
-      'home = os.path.expanduser("~")\n' +
-      'repo_path = os.path.join(home, "VulcanStowDeploymentCommonConstructs")\n\n' +
-      'if os.path.exists(repo_path):\n' +
-      '    print("Removing existing VulcanStowDeploymentCommonConstructs...")\n' +
-      '    subprocess.run(["rm", "-rf", repo_path])\n' +
-      '    subprocess.run(["sed", "-i", "", "/alias setup=\\|alias upload=\\|alias autobuild=/d", os.path.join(home, ".zshrc")])\n\n' +
-      'print("Cloning VulcanStowDeploymentCommonConstructs package...")\n' +
-      'os.chdir(home)\n' +
-      'subprocess.run(["git", "clone", "ssh://git.amazon.com/pkg/VulcanStowDeploymentCommonConstructs/", "--branch", "atlas-test"], check=True)\n\n' +
-      'print("Setting up aliases...")\n' +
-      'aliases = "alias setup=\'~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/setup-test-folder.sh\'\\n" + \\\n' +
-      '          "alias upload=\'~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/upload-test-folder.sh\'\\n" + \\\n' +
-      '          "alias autobuild=\'python3 autobuild.py\'\\n"\n' +
-      'with open(os.path.join(home, ".zshrc"), "a") as f:\n' +
-      '    f.write(aliases)\n\n' +
-      'subprocess.run(["rm", "-f", os.path.join(home, "builder_setup.py")])\n' +
-      'print("Setup complete! Reloading shell...")\n' +
-      'subprocess.run(["exec", "zsh"])\n';
+    var scriptContent = '#!/usr/bin/env python3\nimport subprocess\nimport os\n\nhome = os.path.expanduser("~")\nrepo_path = os.path.join(home, "VulcanStowDeploymentCommonConstructs")\n\nif os.path.exists(repo_path):\n    print("Removing existing VulcanStowDeploymentCommonConstructs...")\n    subprocess.run(["rm", "-rf", repo_path])\n    subprocess.run(["sed", "-i", "", "/alias setup=\\\\|alias upload=\\\\|alias autobuild=/d", os.path.join(home, ".zshrc")])\n\nprint("Cloning VulcanStowDeploymentCommonConstructs package...")\nos.chdir(home)\nsubprocess.run(["git", "clone", "ssh://git.amazon.com/pkg/VulcanStowDeploymentCommonConstructs/", "--branch", "atlas-test"], check=True)\n\nprint("Setting up aliases...")\naliases = "alias setup=\'~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/setup-test-folder.sh\'\\\\n" + \\\n          "alias upload=\'~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/upload-test-folder.sh\'\\\\n" + \\\n          "alias autobuild=\'python3 autobuild.py\'\\\\n"\nwith open(os.path.join(home, ".zshrc"), "a") as f:\n    f.write(aliases)\n\nsubprocess.run(["rm", "-f", os.path.join(home, "builder_setup.py")])\nprint("Setup complete! Reloading shell...")\nsubprocess.run(["exec", "zsh"])';
     
-    var wgetCommand = 'wget -O builder_setup.py "data:text/x-python;base64,' + btoa(scriptContent) + '" && python3 builder_setup.py';
+    var serverUrl = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
     
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(wgetCommand).then(function() {
-        props.showNotification('wget command copied to clipboard!', 'success');
-      }).catch(function() {
-        props.showNotification('Failed to copy command', 'error');
-      });
-    } else {
-      props.showNotification('Clipboard not supported', 'error');
-    }
+    fetch(serverUrl + '/script', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: scriptContent })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      var wgetCommand = 'wget -O builder_setup.py ' + serverUrl + '/script/' + data.id + ' && python3 builder_setup.py';
+      return navigator.clipboard.writeText(wgetCommand);
+    })
+    .then(function() {
+      props.showNotification('wget command copied to clipboard!', 'success');
+    })
+    .catch(function() {
+      props.showNotification('Failed to generate command', 'error');
+    });
   }
 
   return React.createElement(
