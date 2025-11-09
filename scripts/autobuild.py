@@ -8,7 +8,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def get_server_url():
-    return os.environ.get('SERVER_URL', 'http://localhost:3001')
+    return os.environ.get('SERVER_URL')
 
 def save_checkpoint(index, key):
     with open(f'/tmp/autobuild_checkpoint_{key}.txt', 'w') as f:
@@ -30,6 +30,9 @@ def clear_checkpoint(key):
 def get_data(key, server_url=None):
     if server_url is None:
         server_url = get_server_url()
+    if not server_url:
+        logging.error("SERVER_URL environment variable not set")
+        return None
     try:
         url = f'{server_url}/data/{key}'
         logging.info(f"Fetching data from: {url}")
