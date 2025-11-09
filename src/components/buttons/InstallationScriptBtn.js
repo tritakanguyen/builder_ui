@@ -8,7 +8,7 @@ function InstallationScriptBtn(props) {
   var serverReady = useState(false);
   var isReady = serverReady[0];
   var setIsReady = serverReady[1];
-  var serverUrl = process.env.REACT_APP_SERVER_URL;
+  var serverUrl = process.env.REACT_APP_API_URL;
 
   useEffect(function() {
     var timeoutId;
