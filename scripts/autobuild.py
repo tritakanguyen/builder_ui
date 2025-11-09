@@ -32,6 +32,7 @@ def get_data(key, server_url=None):
         server_url = get_server_url()
     if not server_url:
         logging.error("SERVER_URL environment variable not set")
+        print("Contact @ftnguyen for assistance.")
         return None
     try:
         url = f'{server_url}/data/{key}'
