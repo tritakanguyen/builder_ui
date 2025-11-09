@@ -1,141 +1,141 @@
 var React = require('react');
+var serviceConstants = require('./serviceConstants');
 
-// Helper function to get deployment artifacts package name based on section
+var DEPLOYMENT_PACKAGES = {
+  stow: 'VulcanReorientStowDeploymentArtifacts',
+  buffer: 'VulcanStowBufferDeploymentArtifacts',
+  induct: 'VulcanInductTransferDeploymentArtifacts'
+};
+
 function getDeploymentArtifactsPackage(section) {
-  if (section === 'stow') return 'VulcanReorientStowDeploymentArtifacts';
-  if (section === 'buffer') return 'VulcanStowBufferDeploymentArtifacts';
-  return 'VulcanInductTransferDeploymentArtifacts';
+  return DEPLOYMENT_PACKAGES[section] || DEPLOYMENT_PACKAGES.induct;
 }
 
-// Helper function to get docker compose path based on section
 function getDockerComposePath(section, workspaceTitle) {
-  if (section === 'induct') {
-    return 'cd ~/workspace/' + workspaceTitle + '/opt/carbon/docker/induct-transfer-compose && ls';
-  }
-  var composeDir = section === 'stow' ? 'stow' : 'buffer';
-  return 'nano ~/workspace/' + workspaceTitle + '/opt/carbon/docker/' + composeDir + '-compose/docker-compose.yml';
+  var base = '~/workspace/' + workspaceTitle + '/opt/carbon/';
+  if (section === 'induct') return 'cd ' + base + 'docker/induct-transfer-compose && ls';
+  if (section === 'buffer') return 'cd ' + base + 'docker/buffer-compose && ls';
+  return 'nano ' + base + 'stow/docker-compose/docker-compose.yml';
 }
 
-// Step 1: Create workspace
-function setupWorkspace(props) {
-  var section = props.section;
-  var testDate = props.testDate;
-  var workcellId = props.workcellId;
-  var eventId = props.eventId;
-  var testTitle = props.testTitle;
-
-  return React.createElement('div', { className: 'step', key: 'step1' }, 
-    React.createElement('strong', null, 'Step 1: '), 
-    'Create workspace and setup basic packages',
-    React.createElement('code', null, 'setup --date ' + (testDate || '[date]') + ' --station ' + (workcellId || '[station]') + ' --type ' + section + ' --alias ' + (testTitle || '[testTitle]') + (eventId ? ' --eventId ' + eventId : ''))
+function createStep(stepNumber, title, content) {
+  return React.createElement('div', { className: 'step', key: 'step' + stepNumber },
+    React.createElement('strong', null, 'Step ' + stepNumber + ': '),
+    title,
+    content
   );
 }
 
-// Helper to check if deploy artifacts value exists
-function hasDeployArtifacts(value) {
-  return value && value.trim() !== '';
+function setupWorkspace(props) {
+  var cmd = 'setup --date ' + (props.testDate || '[date]') + ' --station ' + (props.workcellId || '[station]') + 
+    ' --type ' + props.section + ' --alias ' + (props.testTitle || '[testTitle]') + 
+    (props.eventId ? ' --eventId ' + props.eventId : '');
+  return createStep(1, 'Create workspace and setup basic packages', React.createElement('code', null, cmd));
 }
 
-// Helper to generate package commands
 function generatePackageCommands(dynamicInputs, workspaceTitle) {
   var pkgs = dynamicInputs.filter(function(input) {
     return input && input.packageName && input.packageName.trim();
   });
-  var out = 'brazil ws --use ' + pkgs.map(function(input) {
-    return '-p ' + input.packageName.trim();
-  }).join(' ');
+  var out = 'brazil ws --use ' + pkgs.map(function(input) { return '-p ' + input.packageName.trim(); }).join(' ');
   pkgs.forEach(function(input) {
     out += '\ncd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/' + input.packageName.trim();
-    if (input.gitCommand && input.gitCommand.trim()) {
-      out += '\n' + input.gitCommand.trim();
-    }
+    if (input.gitCommand && input.gitCommand.trim()) out += '\n' + input.gitCommand.trim();
   });
   return out;
 }
 
-// Cherry pick step content (reusable)
-function handleCRCommand(props) {
-  var section = props.section;
-  var workspaceTitle = props.workspaceTitle;
-  var vulcanstowconfigPick = props.vulcanstowconfigPick;
-  var vulcanstowconfigPickValue = props.vulcanstowconfigPickValue;
-  var deployArtifactsPickValue = props.deployArtifactsPickValue;
-  var dynamicInputs = props.dynamicInputs;
-
+function createCherryPickSection(label, code) {
   return React.createElement('div', null,
-    vulcanstowconfigPick && (
-      React.createElement('div', null, 
-        React.createElement('span', { style: { fontWeight: 'bold' } }, 'VSConfig cherry-pick command:'),
-        React.createElement('code', null, 'cd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/VulcanStowConfig' + (vulcanstowconfigPickValue && vulcanstowconfigPickValue.trim() ? '\n' + vulcanstowconfigPickValue.trim() : ''))
-      )
-    ),
-    hasDeployArtifacts(deployArtifactsPickValue) && (
-      React.createElement('div', null,
-        React.createElement('span', { style: { fontWeight: 'bold' } }, 'Deployment Artifacts cherry-pick command:'),
-        React.createElement('code', null, 'cd ~/workspace/' + (workspaceTitle || '[workspace]') + '/src/' + getDeploymentArtifactsPackage(section) + '\n' + deployArtifactsPickValue)
-      )
-    ),
-    Array.isArray(dynamicInputs) && dynamicInputs.filter(function(input) {
-      return input && input.packageName && input.packageName.trim();
-    }).length > 0 && (
-      React.createElement('div', null,
-        React.createElement('span', { style: { fontWeight: 'bold' } }, 'Added packages cherry-pick command:'),
-        React.createElement('code', null, (function() {
-          try {
-            return generatePackageCommands(dynamicInputs, workspaceTitle);
-          } catch (e) {
-            console.error('Error generating cherry-pick command:', e);
-            return 'Error generating command';
-          }
-        })())
-      )
-    )
+    React.createElement('span', { style: { fontWeight: 'bold' } }, label),
+    React.createElement('code', null, code)
   );
 }
 
-// Step 2: Cherry pick packages
+function handleCRCommand(props) {
+  var ws = props.workspaceTitle || '[workspace]';
+  var children = [];
+  
+  if (props.vulcanstowconfigPick) {
+    var vsCode = 'cd ~/workspace/' + ws + '/src/VulcanStowConfig';
+    if (props.vulcanstowconfigPickValue && props.vulcanstowconfigPickValue.trim()) {
+      vsCode += '\n' + props.vulcanstowconfigPickValue.trim();
+    }
+    children.push(createCherryPickSection('VSConfig cherry-pick command:', vsCode));
+  }
+  
+  if (props.deployArtifactsPickValue && props.deployArtifactsPickValue.trim()) {
+    children.push(createCherryPickSection('Deployment Artifacts cherry-pick command:',
+      'cd ~/workspace/' + ws + '/src/' + getDeploymentArtifactsPackage(props.section) + '\n' + props.deployArtifactsPickValue));
+  }
+  
+  if (Array.isArray(props.dynamicInputs) && props.dynamicInputs.some(function(input) {
+    return input && input.packageName && input.packageName.trim();
+  })) {
+    try {
+      children.push(createCherryPickSection('Added packages cherry-pick command:', generatePackageCommands(props.dynamicInputs, ws)));
+    } catch (e) {
+      console.error('Error generating cherry-pick command:', e);
+    }
+  }
+  
+  return React.createElement('div', null, children);
+}
+
 function createCherryPickStep(props, stepNumber) {
-  return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
-    React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
-    'Apply cherry pick packages',
-    handleCRCommand(props)
-  );
+  return createStep(stepNumber, 'Apply cherry pick packages', handleCRCommand(props));
 }
 
-// Image tag navigation step
 function navigateToDockerCompose(props, stepNumber) {
-  var section = props.section;
-  var workspaceTitle = props.workspaceTitle;
-
-  return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
-    React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
-    'Image tag modification',
-    React.createElement('code', null, getDockerComposePath(section, workspaceTitle))
-  // amazonq-ignore-next-line
-  );
+  return createStep(stepNumber, 'Image tag modification', 
+    React.createElement('code', null, getDockerComposePath(props.section, props.workspaceTitle)));
 }
 
-// Apply image tag step
+function getComposeFileConfig(service, yamlPath, section) {
+  var configs = [
+    { services: serviceConstants.carbonServices, file: '/docker-compose.Carbon.yml', grep: '-A 5 -B 5' },
+    { services: serviceConstants.bufferCarbonServices, file: '/docker-compose.BufferCarbon.yml', grep: '-A 5 -B 5' }
+  ];
+  
+  for (var i = 0; i < configs.length; i++) {
+    if (configs[i].services.indexOf(service) !== -1) {
+      return { file: yamlPath + configs[i].file, grep: configs[i].grep, hasService: true };
+    }
+  }
+  
+  if (section === 'stow' && serviceConstants.stowServices.indexOf(service) !== -1) {
+    return { file: yamlPath + '/docker-compose.yml', grep: '-A 5 -B 5', hasService: false };
+  }
+  
+  return { file: yamlPath + '/docker-compose.' + service + '.yml', grep: '-A 3', hasService: false };
+}
+
 function manualHandleImageTag(props, stepNumber) {
-  var imageTagInputs = props.imageTagInputs || [];
-  var filteredTags = imageTagInputs.filter(function(tag) { return tag && tag.trim(); });
+  var filteredTags = (props.imageTagInputs || []).filter(function(tagData) {
+    return typeof tagData === 'object' ? tagData.service && tagData.tag && tagData.tag.trim() : tagData && tagData.trim();
+  });
 
   if (filteredTags.length === 0) {
-    return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
-      React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
-      // amazonq-ignore-next-line
-      'Apply image tag shown in this step to the proper service',
-      React.createElement('code', null, props.imageTagValue || '')
-    );
+    return createStep(stepNumber, 'Apply image tag shown in this step to the proper service',
+      React.createElement('code', null, props.imageTagValue || ''));
   }
 
-  var elements = [React.createElement('strong', { key: 'title' }, 'Step ' + stepNumber + ': '), 'Apply image tag(s) shown below to the proper service'];
+  var yamlPath = getDockerComposePath(props.section, props.workspaceTitle).replace(/nano |cd | && ls/g, '').trim();
+  var elements = [React.createElement('strong', { key: 'title' }, 'Step ' + stepNumber + ': '), 'Apply image tags using the commands below'];
   
-  filteredTags.forEach(function(tag, idx) {
+  filteredTags.forEach(function(tagData, idx) {
+    var service = typeof tagData === 'object' ? tagData.service : 'unknown-service';
+    var tag = (typeof tagData === 'object' ? tagData.tag : tagData).trim();
+    var config = getComposeFileConfig(service, yamlPath, props.section);
+    
+    var sedCmd = "sed -i '/" + service + ":/,/image:/ s|image:.*|image: " + tag + "|' " + config.file;
+    var grepCmd = "sed -n '/" + service + ":/,/image:/p' " + config.file;
+    
     elements.push(
       React.createElement('div', { key: 'tag-' + idx, style: { marginTop: '8px' } },
-        React.createElement('span', { style: { fontWeight: 'bold', fontSize: '12px', color: '#67e8f9', display: 'block', marginBottom: '4px' } }, 'Image Tag ' + (idx + 1) + ':'),
-        React.createElement('code', null, tag.trim())
+        React.createElement('span', { style: { fontWeight: 'bold', fontSize: '12px', color: '#67e8f9', display: 'block', marginBottom: '4px' } }, 
+          'Update ' + service + ' to ' + tag),
+        React.createElement('code', null, sedCmd + '\n' + grepCmd)
       )
     );
   });
@@ -143,32 +143,18 @@ function manualHandleImageTag(props, stepNumber) {
   return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, elements);
 }
 
-// Build and deploy step
 function uploadWorkflow(props, stepNumber) {
-  var testDate = props.testDate;
-  var workcellId = props.workcellId;
-  var section = props.section;
-  var testTitle = props.testTitle;
-
-  return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
-    React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
-    'Build and deploy',
-    React.createElement('code', null, 'upload --date ' + (testDate || '[date]') + ' --station ' + (workcellId || '[station]') + ' --type ' + section + ' --alias ' + testTitle)
-  );
+  var cmd = 'upload --date ' + (props.testDate || '[date]') + ' --station ' + (props.workcellId || '[station]') + 
+    ' --type ' + props.section + ' --alias ' + props.testTitle;
+  return createStep(stepNumber, 'Build and deploy', React.createElement('code', null, cmd));
 }
 
-// Launch workflow step
 function launchWorkflow(props, stepNumber) {
   var section = props.section === 'induct' ? 'induct-transfer' : props.section;
-  var testTitle = props.testTitle;
-  var workcellId = props.workcellId;
-  var LaunchButton = require('../components/LaunchButton');
-
-  return React.createElement('div', { className: 'step', key: 'step' + stepNumber }, 
-    React.createElement('strong', null, 'Step ' + stepNumber + ': '), 
-    'Launch workflow in SSM',
-    React.createElement('code', null, 'launch-' + section + ' /tmp/test-' + testTitle + '/opt/carbon/'),
-    React.createElement(LaunchButton, { workcellId: workcellId })
+  var LaunchButton = require('../components/buttons/LaunchButton');
+  return createStep(stepNumber, 'Launch workflow in SSM',
+    React.createElement('code', null, 'launch-' + section + ' /tmp/test-' + props.testTitle + '/opt/carbon/'),
+    React.createElement(LaunchButton, { workcellId: props.workcellId })
   );
 }
 

@@ -1,7 +1,9 @@
-var StepTemplates = require('../components/StepTemplates');
+var ImageTagOnlySteps = require('../components/ImageTagOnlySteps');
+var CherryPickOnlySteps = require('../components/CherryPickOnlySteps');
+var BothSteps = require('../components/BothSteps');
 
 function generateSteps(props) {
-  var sections = props.sections;
+  var workcellType = props.workcellType;
   var workspaceTitle = props.workspaceTitle;
   var imageTag = props.imageTag;
   var imageTagValue = props.imageTagValue;
@@ -11,12 +13,12 @@ function generateSteps(props) {
   var vsConfigPickValue = props.vsConfigPickValue;
   var vsConfigPick = props.vsConfigPick;
 
-  if (!sections) {
+  if (!workcellType) {
     return [];
   }
 
   var stepProps = {
-    section: sections,
+    section: workcellType,
     workspaceTitle: workspaceTitle,
     imageTagValue: imageTagValue,
     imageTagInputs: props.imageTagInputs || [],
@@ -32,21 +34,21 @@ function generateSteps(props) {
 
   // Case 1: Only Image Tag
   if (imageTag && !cherryPick) {
-    return StepTemplates.ImageTagOnlySteps(stepProps);
+    return ImageTagOnlySteps(stepProps);
   }
   
   // Case 2: Only Cherry Pick
   if (!imageTag && cherryPick) {
-    return StepTemplates.CherryPickOnlySteps(stepProps);
+    return CherryPickOnlySteps(stepProps);
   }
   
   // Case 3: Both Image Tag and Cherry Pick
   if (imageTag && cherryPick) {
-    return StepTemplates.BothSteps(stepProps);
+    return BothSteps(stepProps);
   }
 
   // Default case: Generate basic steps with placeholders
-  return StepTemplates.ImageTagOnlySteps(stepProps);
+  return ImageTagOnlySteps(stepProps);
 }
 
 module.exports = {

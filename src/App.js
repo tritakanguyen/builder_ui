@@ -3,9 +3,10 @@ var StepsGuide = require('./components/StepsGuide');
 var SessionSidebar = require('./components/SessionSidebar');
 var TroubleshootPanel = require('./components/TroubleshootPanel');
 var MainForm = require('./components/MainForm');
-var ActionButtons = require('./components/ActionButtons');
+var ButtonsControl = require('./components/ButtonsControl');
 var UserGuide = require('./components/UserGuide');
-var BuilderSetupScript = require('./components/BuilderSetupScript');
+var InstallationScriptBtn = require('./components/buttons/InstallationScriptBtn');
+var StringKeyButton = require('./components/buttons/StringKeyButton');
 var LaunchWidget = require('./components/LaunchWidget');
 var NotificationBanner = require('./components/NotificationBanner');
 
@@ -49,9 +50,11 @@ function App() {
   var eventId = eventIdState[0];
   var setEventId = eventIdState[1];
 
-  var sectionsState = React.useState('');
-  var sections = sectionsState[0];
-  var setSections = sectionsState[1];
+  var workcellTypeState = React.useState('');
+  var workcellType = workcellTypeState[0];
+  var setWorkcellType = workcellTypeState[1];
+
+  var prevWorkcellIdRef = React.useRef('');
 
   var imageTagState = React.useState(false);
   var imageTag = imageTagState[0];
@@ -143,8 +146,8 @@ function App() {
   React.useEffect(function() {
     var interval = setInterval(function() {
       try {
-        if (sections) {
-          var stepsContainer = document.getElementById(sections + 'Steps');
+        if (workcellType) {
+          var stepsContainer = document.getElementById(workcellType + 'Steps');
           if (stepsContainer && stepsContainer.children.length > 0) {
             setStepsGenerated(true);
             clearInterval(interval);
@@ -158,7 +161,7 @@ function App() {
     return function() {
       clearInterval(interval);
     };
-  }, [sections]);
+  }, [workcellType]);
 
   // Update workspace title as user types
   React.useEffect(function() {
@@ -171,16 +174,15 @@ function App() {
   // Set default section based on workcellId
   React.useEffect(function() {
     try {
-      if (workcellId) {
-        var newSection = ['0202', '0205', '0302', '0305'].indexOf(workcellId) !== -1 ? 'induct' : 'stow';
-        if (newSection !== sections) {
-          setSections(newSection);
-        }
+      if (workcellId && workcellId !== prevWorkcellIdRef.current) {
+        prevWorkcellIdRef.current = workcellId;
+        var newWorkcellType = ['0202', '0205', '0302', '0305'].indexOf(workcellId) !== -1 ? 'induct' : 'stow';
+        setWorkcellType(newWorkcellType);
       }
     } catch (e) {
-      console.error('Error setting default section:', e);
+      console.error('Error setting default workcell type:', e);
     }
-  }, [workcellId, sections]);
+  }, [workcellId]);
 
   function formatTimestamp() {
     var d = new Date();
@@ -207,7 +209,7 @@ function App() {
       testTitle: testTitle,
       workcellId: workcellId,
       eventId: eventId,
-      sections: sections,
+      workcellType: workcellType,
       imageTag: imageTag,
       imageTagValue: imageTagValue,
       imageTagInputs: imageTagInputs,
@@ -239,8 +241,11 @@ function App() {
     setTestTitle(s.testTitle);
     setWorkcellId(s.workcellId || '');
     setEventId(s.eventId || '');
-    setSections(s.sections);
-    var hasImageTags = s.imageTagInputs && s.imageTagInputs.length > 0;
+    setWorkcellType(s.workcellType || s.sections);
+    var hasImageTags = s.imageTagInputs && s.imageTagInputs.length > 0 && s.imageTagInputs.some(function(t) {
+      if (typeof t === 'object') return t.service && t.tag;
+      return t && t.trim();
+    });
     setImageTag(hasImageTags || s.imageTag || false);
     setImageTagValue(s.imageTagValue || '');
     setImageTagInputs(s.imageTagInputs || []);
@@ -267,21 +272,6 @@ function App() {
     }
   }
 
-  function fallbackCopyKey(key) {
-    try {
-      var textarea = document.createElement('textarea');
-      textarea.value = key;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textarea);
-      showNotification('Key copied: ' + key, 'success');
-    } catch (e) {
-      console.error('Fallback copy failed:', e);
-      showNotification('Failed to copy key', 'error');
-    }
-  }
-
   function handleResetForm() {
     if (!window.confirm('Reset all form fields? This will clear all your current data.')) return;
     showNotification('Form reset successfully!', 'success');
@@ -289,7 +279,7 @@ function App() {
     setTestTitle('');
     setWorkcellId('');
     setEventId('');
-    setSections('');
+    setWorkcellType('');
     setImageTag(false);
     setImageTagValue('');
     setImageTagInputs([]);
@@ -323,7 +313,7 @@ function App() {
     setTestTitle('demo-test');
     setWorkcellId('0206');
     setEventId('example-event-123');
-    setSections('stow');
+    setWorkcellType('stow');
     // Enable checkboxes with demo data
     setImageTag(true);
     setImageTagValue('v1.2.3-demo');
@@ -341,7 +331,7 @@ function App() {
       setTestTitle('');
       setWorkcellId('');
       setEventId('');
-      setSections('');
+      setWorkcellType('');
       // Clear checkbox demo data
       setImageTag(false);
       setImageTagValue('');
@@ -416,32 +406,12 @@ function App() {
       React.createElement('div', { className: 'text-cyan-200 text-[9px] mb-1' }, 'Tap the 🤖 button to save/load your form data.'),
       React.createElement('div', { className: 'text-cyan-400/70 text-[8px]' }, 'Sessions are stored locally.')
     ),
-    // Auto-build button - shows above reset button after steps are generated
-    stepsGenerated && generatedKey && React.createElement(
-      'button',
-      {
-        className: 'fixed right-2 bottom-14 sm:right-2.5 sm:bottom-16 z-[1300] bg-gradient-to-br from-cyan-600 to-cyan-800 hover:from-cyan-500 hover:to-cyan-700 border-2 border-cyan-400 text-white rounded-full w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center shadow-lg shadow-cyan-500/50 hover:shadow-cyan-400/70 transition-all text-sm font-bold',
-        title: 'Key: ' + generatedKey + ' (Click to copy)',
-        onClick: function() {
-          try {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-              navigator.clipboard.writeText(generatedKey).then(function() {
-                showNotification('Key copied: ' + generatedKey, 'success');
-              }).catch(function(err) {
-                console.error('Clipboard write failed:', err);
-                fallbackCopyKey(generatedKey);
-              });
-            } else {
-              fallbackCopyKey(generatedKey);
-            }
-          } catch (e) {
-            console.error('Error copying key:', e);
-            fallbackCopyKey(generatedKey);
-          }
-        }
-      },
-      '⚙'
-    ),
+    // Auto-build key button - shows above reset button after steps are generated
+    React.createElement(StringKeyButton, {
+      stepsGenerated: stepsGenerated,
+      generatedKey: generatedKey,
+      showNotification: showNotification
+    }),
     // Reset button - fixed at bottom-right
     React.createElement(
       'button',
@@ -455,7 +425,7 @@ function App() {
     // Launch widget
     React.createElement(LaunchWidget),
     // Builder setup script button - fixed at bottom-left above user guide
-    React.createElement(BuilderSetupScript, { workcellId: workcellId, showNotification: showNotification }),
+    React.createElement(InstallationScriptBtn, { workcellId: workcellId, showNotification: showNotification }),
     // User guide toggle button - fixed at bottom-left
     React.createElement(
       'button',
@@ -488,8 +458,8 @@ function App() {
         setWorkcellId: setWorkcellId,
         eventId: eventId,
         setEventId: setEventId,
-        sections: sections,
-        setSections: setSections,
+        workcellType: workcellType,
+        setWorkcellType: setWorkcellType,
         imageTag: imageTag,
         setImageTag: setImageTag,
         imageTagValue: imageTagValue,
@@ -515,11 +485,11 @@ function App() {
         { className: 'bg-red-900/30 border border-red-500 text-red-400 px-4 py-2 rounded mb-4' },
         formWarning
       ),
-      React.createElement(ActionButtons, {
+      React.createElement(ButtonsControl, {
         testDate: testDate,
         testTitle: testTitle,
         workspaceTitle: workspaceTitle,
-        sections: sections,
+        workcellType: workcellType,
         imageTag: imageTag,
         imageTagValue: imageTagValue,
         imageTagInputs: imageTagInputs,
@@ -528,7 +498,7 @@ function App() {
         eventId: eventId,
         workcellId: workcellId,
         setFormWarning: setFormWarning,
-        setSections: setSections,
+        setWorkcellType: setWorkcellType,
         setTestDate: setTestDate,
         setTestTitle: setTestTitle,
         deployArtifactsPickValue: deployArtifactsPickValue,
@@ -537,7 +507,7 @@ function App() {
         setGeneratedKey: setGeneratedKey,
         showNotification: showNotification
       }),
-      React.createElement(StepsGuide, { activeSections: sections }),
+      React.createElement(StepsGuide, { activeWorkcellType: workcellType }),
       React.createElement(SessionSidebar, {
         onSaveSession: handleSaveSession,
         sessions: sessions,

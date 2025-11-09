@@ -10,8 +10,12 @@ app.use(express.json());
 const keys = new Map();
 
 function generateKey(station, testTitle) {
-  var random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return 'setup-' + random;
+  try {
+    var random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return random;
+  } catch (error) {
+    throw new Error('Failed to generate key');
+  }
 }
 
 function cleanupExpiredKeys() {
@@ -29,13 +33,17 @@ function hasValidKeys() {
 }
 
 app.post('/create', (req, res) => {
-  const { data, station, testTitle } = req.body;
-  const key = generateKey(station, testTitle);
-  keys.set(key, {
-    data: data,
-    expires: Date.now() + (30 * 60 * 1000)
-  });
-  res.json({ key });
+  try {
+    const { data, station, testTitle } = req.body;
+    const key = generateKey(station, testTitle);
+    keys.set(key, {
+      data: data,
+      expires: Date.now() + (30 * 60 * 1000)
+    });
+    res.json({ key });
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 app.get('/data/:key', (req, res) => {
@@ -48,8 +56,8 @@ app.get('/data/:key', (req, res) => {
   
   const data = keyData.data;
   keys.delete(key);
-  res.setHeader('Content-Type', 'text/plain');
-  res.send(data);
+  const commands = data.split('\n\n').filter(cmd => cmd.trim());
+  res.json({ commands });
 });
 
 app.get('/ping', (req, res) => {

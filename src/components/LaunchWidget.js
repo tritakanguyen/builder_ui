@@ -1,5 +1,5 @@
 var React = require('react');
-var LaunchButton = require('./LaunchButton');
+var LaunchButton = require('./buttons/LaunchButton');
 
 var stationMap = LaunchButton.stationMap;
 

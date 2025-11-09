@@ -1,4 +1,5 @@
 var React = require('react');
+var ImageTagDialog = require('./ImageTagDialog');
 
 function MainForm(props) {
   var testDate = props.testDate;
@@ -10,8 +11,8 @@ function MainForm(props) {
   var setWorkcellId = props.setWorkcellId;
   var eventId = props.eventId;
   var setEventId = props.setEventId;
-  var sections = props.sections;
-  var setSections = props.setSections;
+  var workcellType = props.workcellType;
+  var setWorkcellType = props.setWorkcellType;
   var imageTag = props.imageTag;
   var setImageTag = props.setImageTag;
   var imageTagValue = props.imageTagValue;
@@ -19,18 +20,35 @@ function MainForm(props) {
   var imageTagInputs = props.imageTagInputs || [];
   var setImageTagInputs = props.setImageTagInputs;
 
+  var dialogOpenState = React.useState(false);
+  var dialogOpen = dialogOpenState[0];
+  var setDialogOpen = dialogOpenState[1];
+
+  var editingIndexState = React.useState(null);
+  var editingIndex = editingIndexState[0];
+  var setEditingIndex = editingIndexState[1];
+
   function addImageTagInput() {
-    setImageTagInputs(imageTagInputs.concat(['']));
+    setEditingIndex(imageTagInputs.length);
+    setDialogOpen(true);
   }
 
   function removeImageTagInput(idx) {
     setImageTagInputs(imageTagInputs.filter(function(_, i) { return i !== idx; }));
   }
 
-  function handleImageTagInputChange(idx, value) {
-    var newInputs = imageTagInputs.map(function(input, i) {
-      return i === idx ? value : input;
-    });
+  function handleEditImageTag(idx) {
+    setEditingIndex(idx);
+    setDialogOpen(true);
+  }
+
+  function handleSaveImageTag(data) {
+    var newInputs = imageTagInputs.slice();
+    if (editingIndex === imageTagInputs.length) {
+      newInputs.push(data);
+    } else {
+      newInputs[editingIndex] = data;
+    }
     setImageTagInputs(newInputs);
   }
   var cherryPick = props.cherryPick;
@@ -192,18 +210,17 @@ function MainForm(props) {
       { className: 'form-group' },
       React.createElement(
         'label',
-        { htmlFor: 'sections', className: 'font-semibold mb-1 block text-cyan-400 text-xs uppercase tracking-wide' },
+        { htmlFor: 'workcellType', className: 'font-semibold mb-1 block text-cyan-400 text-xs uppercase tracking-wide' },
         'Type'
       ),
       React.createElement(
         'select',
         {
-          id: 'sections',
+          id: 'workcellType',
           className: 'input-field',
-          value: sections,
-          onChange: function(e) { setSections(e.target.value); }
+          value: workcellType,
+          onChange: function(e) { setWorkcellType(e.target.value); }
         },
-        React.createElement('option', { value: '' }, 'Select Type'),
         React.createElement('option', { value: 'stow' }, 'Stow'),
         React.createElement('option', { value: 'buffer' }, 'Buffer'),
         React.createElement('option', { value: 'induct' }, 'Induct')
@@ -221,12 +238,7 @@ function MainForm(props) {
           React.createElement('input', {
             type: 'checkbox',
             checked: imageTag,
-            onChange: function(e) {
-              setImageTag(e.target.checked);
-              if (e.target.checked && imageTagInputs.length === 0) {
-                setImageTagInputs(['']);
-              }
-            }
+            onChange: function(e) { setImageTag(e.target.checked); }
           }),
           React.createElement(
             'span',
@@ -242,13 +254,15 @@ function MainForm(props) {
         imageTag && React.createElement(
           'div',
           { className: 'mt-2' },
-          imageTagInputs.map(function(tag, idx) {
+          imageTagInputs.map(function(tagData, idx) {
+            var service = typeof tagData === 'object' ? tagData.service : '';
+            var tag = typeof tagData === 'object' ? tagData.tag : tagData;
             return React.createElement(
               'div',
               { key: idx, className: 'p-2 bg-slate-900 border border-slate-700 rounded mb-2' },
               React.createElement(
                 'div',
-                { className: 'flex items-center gap-2 mb-1' },
+                { className: 'flex items-center justify-between mb-2' },
                 React.createElement(
                   'label',
                   { className: 'font-semibold text-cyan-400 text-xs uppercase' },
@@ -264,12 +278,27 @@ function MainForm(props) {
                   '✕'
                 )
               ),
-              React.createElement('textarea', {
-                className: 'input-field',
-                value: tag,
-                onChange: function(e) { handleImageTagInputChange(idx, e.target.value); },
-                placeholder: 'Enter image tag'
-              })
+              service && React.createElement(
+                'div',
+                { className: 'text-xs text-slate-400 mb-1' },
+                'Service: ',
+                React.createElement('span', { className: 'text-cyan-300' }, service)
+              ),
+              React.createElement(
+                'div',
+                { className: 'text-xs text-slate-400 mb-2' },
+                'Tag: ',
+                React.createElement('span', { className: 'text-cyan-300' }, tag || 'Not set')
+              ),
+              React.createElement(
+                'button',
+                {
+                  type: 'button',
+                  className: 'btn-secondary text-xs w-full',
+                  onClick: function() { handleEditImageTag(idx); }
+                },
+                service ? 'Edit' : 'Set Service & Tag'
+              )
             );
           }),
           React.createElement(
@@ -280,7 +309,15 @@ function MainForm(props) {
               onClick: addImageTagInput
             },
             '+ Add Image Tag'
-          )
+          ),
+          React.createElement(ImageTagDialog, {
+            isOpen: dialogOpen,
+            onClose: function() { setDialogOpen(false); },
+            onSave: handleSaveImageTag,
+            workcellType: workcellType,
+            initialService: editingIndex !== null && imageTagInputs[editingIndex] && typeof imageTagInputs[editingIndex] === 'object' ? imageTagInputs[editingIndex].service : '',
+            initialTag: editingIndex !== null && imageTagInputs[editingIndex] ? (typeof imageTagInputs[editingIndex] === 'object' ? imageTagInputs[editingIndex].tag : imageTagInputs[editingIndex]) : ''
+          })
         )
       ),
       React.createElement(

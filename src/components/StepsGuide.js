@@ -1,9 +1,9 @@
 var React = require('react');
 
 function StepsGuide(props) {
-  var activeSections = props.activeSections;
+  var activeWorkcellType = props.activeWorkcellType;
   
-  if (!activeSections) return null;
+  if (!activeWorkcellType) return null;
 
   // This will be populated by the step generation logic
   var sectionSteps = {
@@ -49,7 +49,7 @@ function StepsGuide(props) {
       className: 'mt-8 card p-6 transition-all border-cyan-500/30',
       style: { display: 'none' }
     },
-    renderSteps(activeSections)
+    renderSteps(activeWorkcellType)
   );
 }
 
