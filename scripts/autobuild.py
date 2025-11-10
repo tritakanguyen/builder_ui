@@ -52,7 +52,8 @@ def get_data(key, server_url=None):
 
 def execute_commands(commands, key, start_index=0):
     i = start_index
-    while i < len(commands):
+    # Skip the last command
+    while i < len(commands) - 1:
         cmd = commands[i]
         logging.info(f"[{i+1}/{len(commands)}] Executing: {cmd}")
         result = subprocess.run(cmd, shell=True, executable='/bin/zsh')
@@ -82,6 +83,8 @@ if __name__ == '__main__':
         if start_index > 0:
             logging.info(f"Resuming from checkpoint: step {start_index + 1}")
         logging.info("Executing workflow commands...")
+        if len(data['commands']) > 0:
+            logging.info(f"Ready to launch")
         execute_commands(data['commands'], key, start_index)
         clear_checkpoint(key)
         logging.info("Workflow execution completed!")
