@@ -15,7 +15,7 @@ function getDockerComposePath(section, workspaceTitle) {
   var base = '~/workspace/' + workspaceTitle + '/opt/carbon/';
   if (section === 'induct') return 'cd ' + base + 'docker/induct-transfer-compose && ls';
   if (section === 'buffer') return 'cd ' + base + 'docker/buffer-compose && ls';
-  return 'nano ' + base + 'stow/docker-compose/docker-compose.yml';
+  return 'nano ' + base + 'stow/docker-compose';
 }
 
 function createStep(stepNumber, title, content) {
