@@ -128,7 +128,7 @@ function manualHandleImageTag(props, stepNumber) {
     var tag = (typeof tagData === 'object' ? tagData.tag : tagData).trim();
     var config = getComposeFileConfig(service, yamlPath, props.section);
     
-    var sedCmd = "sed -i '/" + service + ":/,/image:/ s|image:.*|image: " + tag + "|' " + config.file;
+    var sedCmd = "sed -i '0,/^  " + service + ":/{0,/image:/s|image:.*|image: " + tag + "|}' " + config.file;
     var grepCmd = "sed -n '/" + service + ":/,/image:/p' " + config.file;
     
     elements.push(
