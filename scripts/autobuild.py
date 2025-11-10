@@ -55,7 +55,7 @@ def execute_commands(commands, key, start_index=0):
     while i < len(commands):
         cmd = commands[i]
         logging.info(f"[{i+1}/{len(commands)}] Executing: {cmd}")
-        result = subprocess.run(cmd, shell=True)
+        result = subprocess.run(cmd, shell=True, executable='/bin/zsh')
         
         if result.returncode != 0:
             logging.error(f"Command failed with exit code {result.returncode}")
