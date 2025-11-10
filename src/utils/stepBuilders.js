@@ -1,6 +1,6 @@
 var React = require('react');
 var serviceConstants = require('./serviceConstants');
-var generateYamlUpdateCommand = require('./yamlImageUpdater');
+var generateYamlUpdateCommand = require('./updateDockerImage');
 
 var DEPLOYMENT_PACKAGES = {
   stow: 'VulcanReorientStowDeploymentArtifacts',
