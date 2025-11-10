@@ -1,9 +1,10 @@
 var React = require('react');
+var serviceConstants = require('../utils/serviceConstants');
 
 var servicesByType = {
-  stow: ['ABExperimentService', 'AutoAnnotation', 'BaslerManager', 'Calibration', 'CarbonCopy', 'ChaseAdapter', 'ConfigLoader', 'ContainerItemMatch', 'ContainerPerception', 'ErrorMonitoring', 'FcxAdapterService', 'GraspPerception', 'HealthAggregator', 'Hub', 'HubCLI', 'HubGatewayStow', 'InHandPerception', 'InductApplet', 'InfeedController', 'InventoryManagement', 'ItemHandling', 'ItemReorientation', 'KPPSAdapter', 'LabPodInventory', 'MetricService', 'MotionPlanner', 'MotionPolicyExecutor', 'NitroWebApp', 'OpcuaAdapter', 'OperatorUIService', 'Orchestrator', 'OutfeedService', 'PodLocalization', 'PreImagingContainerPerception', 'RobotController', 'ScannerService', 'VOCALService', 'Webcam', 'WorkcellMetric', 'nginx', 'web_gateway'],
-  buffer: ['BufferOpcuaAdapter', 'BufferItemHandling', 'BufferOrchestrator', 'ConfigLoader', 'CarbonCopy', 'HealthAggregator', 'Hub', 'MetricService', 'nginx', 'web_gateway', 'hub_gateway_induct_to_buffer1', 'NitroWebApp', 'HubCli'],
-  induct: ['BaslerManager', 'ScannerService', 'ConfigLoader', 'CarbonCopy', 'HealthAggregatorService', 'Hub', 'MetricService', 'nginx', 'web_gateway', 'hub_gateway', 'NitroWebApp', 'HubCli', 'GraspPercept', 'InductApplet', 'InfeedControl', 'ItemHandling', 'ItemRouting', 'OpcuaAdapter', 'OperatorUI', 'Orchestrator', 'VOCALService']
+  stow: serviceConstants.stowServices,
+  buffer: serviceConstants.bufferCarbonServices.concat(['BufferItemHandling', 'BufferOpcuaAdapter', 'BufferOrchestrator']),
+  induct: ['BaslerManager'].concat(serviceConstants.carbonServices, ['GraspPercept', 'InductApplet', 'InfeedControl', 'ItemHandling', 'ItemRouting', 'OpcuaAdapter', 'OperatorUI', 'Orchestrator', 'VOCALService'])
 };
 
 function ImageTagDialog(props) {
