@@ -1,11 +1,13 @@
 var React = require('react');
 var serviceConstants = require('../utils/serviceConstants');
 
-var servicesByType = {
-  stow: serviceConstants.stowServices,
-  buffer: serviceConstants.bufferCarbonServices.concat(['BufferItemHandling', 'BufferOpcuaAdapter', 'BufferOrchestrator']),
-  induct: ['BaslerManager'].concat(serviceConstants.carbonServices, ['GraspPercept', 'InductApplet', 'InfeedControl', 'ItemHandling', 'ItemRouting', 'OpcuaAdapter', 'OperatorUI', 'Orchestrator', 'VOCALService'])
-};
+function getServicesByType() {
+  return {
+    stow: serviceConstants.stowServices,
+    buffer: serviceConstants.bufferCarbonServices.concat(['BufferItemHandling', 'BufferOpcuaAdapter', 'BufferOrchestrator']),
+    induct: ['BaslerManager'].concat(serviceConstants.carbonServices).concat(['GraspPercept', 'InductApplet', 'InfeedControl', 'ItemHandling', 'ItemRouting', 'OpcuaAdapter', 'OperatorUI', 'Orchestrator', 'VOCALService'])
+  };
+}
 
 function ImageTagDialog(props) {
   var isOpen = props.isOpen;
@@ -43,6 +45,7 @@ function ImageTagDialog(props) {
 
   if (!isOpen) return null;
 
+  var servicesByType = getServicesByType();
   var services = servicesByType[workcellType] || [];
 
   return React.createElement(
