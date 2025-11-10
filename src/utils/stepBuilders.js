@@ -27,7 +27,7 @@ function createStep(stepNumber, title, content) {
 }
 
 function setupWorkspace(props) {
-  var cmd = 'setup --date ' + (props.testDate || '[date]') + ' --station ' + (props.workcellId || '[station]') + 
+  var cmd = '~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/setup-test-folder.sh --date ' + (props.testDate || '[date]') + ' --station ' + (props.workcellId || '[station]') + 
     ' --type ' + props.section + ' --alias ' + (props.testTitle || '[testTitle]') + 
     (props.eventId ? ' --eventId ' + props.eventId : '');
   return createStep(1, 'Create workspace and setup basic packages', React.createElement('code', null, cmd));
@@ -144,7 +144,7 @@ function manualHandleImageTag(props, stepNumber) {
 }
 
 function uploadWorkflow(props, stepNumber) {
-  var cmd = 'upload --date ' + (props.testDate || '[date]') + ' --station ' + (props.workcellId || '[station]') + 
+  var cmd = '~/VulcanStowDeploymentCommonConstructs/atlas-test-scripts/upload-test-folder.sh --date ' + (props.testDate || '[date]') + ' --station ' + (props.workcellId || '[station]') + 
     ' --type ' + props.section + ' --alias ' + props.testTitle;
   return createStep(stepNumber, 'Build and deploy', React.createElement('code', null, cmd));
 }
