@@ -5,7 +5,7 @@ function StringKeyButton(props) {
   var generatedKey = props.generatedKey;
   var showNotification = props.showNotification;
 
-  if (stepsGenerated < 2 || !generatedKey) return null;
+  if (!stepsGenerated || !generatedKey) return null;
 
   function handleCopyKey() {
     navigator.clipboard.writeText(generatedKey)

@@ -164,9 +164,14 @@ function collectCommands(workcellType) {
   var stepsContainer = document.getElementById(workcellType + 'Steps');
   var allCommands = [];
   if (stepsContainer) {
-    var codeElements = stepsContainer.querySelectorAll('code');
-    codeElements.forEach(function(code) {
-      allCommands.push(code.textContent);
+    var steps = stepsContainer.querySelectorAll('.step');
+    steps.forEach(function(step, idx) {
+      if (idx < steps.length - 1) {
+        var codeElements = step.querySelectorAll('code');
+        codeElements.forEach(function(code) {
+          allCommands.push(code.textContent);
+        });
+      }
     });
   }
   return allCommands.join('\n\n');
