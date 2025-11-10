@@ -1,5 +1,6 @@
 var React = require('react');
 var serviceConstants = require('./serviceConstants');
+var generateYamlUpdateCommand = require('./yamlImageUpdater');
 
 var DEPLOYMENT_PACKAGES = {
   stow: 'VulcanReorientStowDeploymentArtifacts',
@@ -127,16 +128,13 @@ function manualHandleImageTag(props, stepNumber) {
     var service = typeof tagData === 'object' ? tagData.service : 'unknown-service';
     var tag = (typeof tagData === 'object' ? tagData.tag : tagData).trim();
     var config = getComposeFileConfig(service, yamlPath, props.section);
-    
-    var servicePattern = config.hasService ? '^  ' + service + ':' : '^    ' + service + ':';
-    var sedCmd = "sed -i '0,/" + servicePattern + "/{0,/image:/s|image:.*|image: " + tag + "|}' " + config.file;
-    var grepCmd = "sed -n '/" + service + ":/,/image:/p' " + config.file;
+    var updateCmd = generateYamlUpdateCommand(config.file, service, tag, config.hasService);
     
     elements.push(
       React.createElement('div', { key: 'tag-' + idx, style: { marginTop: '8px' } },
         React.createElement('span', { style: { fontWeight: 'bold', fontSize: '12px', color: '#67e8f9', display: 'block', marginBottom: '4px' } }, 
           'Update ' + service + ' to ' + tag),
-        React.createElement('code', null, sedCmd + '\n' + grepCmd)
+        React.createElement('code', null, updateCmd)
       )
     );
   });
