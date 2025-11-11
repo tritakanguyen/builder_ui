@@ -133,10 +133,12 @@ function App() {
   // Ping backend on mount to wake up server
   React.useEffect(function() {
     try {
-      var apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3001';
-      fetch(apiUrl + '/ping').catch(function(err) {
-        console.error('Failed to ping backend:', err);
-      });
+      var apiUrl = process.env.REACT_APP_API_URL;
+      if (apiUrl) {
+        fetch(apiUrl + '/ping').catch(function(err) {
+          console.error('Failed to ping backend:', err);
+        });
+      }
     } catch (e) {
       console.error('Error in ping effect:', e);
     }

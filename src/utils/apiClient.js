@@ -1,4 +1,4 @@
-var SERVER_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+var SERVER_URL = process.env.REACT_APP_API_URL;
 
 function createKey(data, station, testTitle) {
   return fetch(SERVER_URL + '/create', {
