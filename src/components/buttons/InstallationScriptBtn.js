@@ -29,7 +29,7 @@ function InstallationScriptBtn(props) {
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-      var wgetCommand = 'mwinit -o && wget -O builder_setup.py ' + serverUrl + '/script/' + data.id + ' && python3 builder_setup.py';
+      var wgetCommand = 'mwinit -o && wget -O ~/builder_setup.py ' + serverUrl + '/script/' + data.id + ' && python3 ~/builder_setup.py';
       return navigator.clipboard.writeText(wgetCommand);
     })
     .then(function() {
