@@ -1,5 +1,4 @@
 var React = require('react');
-var serviceConstants = require('./serviceConstants');
 var updateDockerImage = require('./updateDockerImage');
 
 var DEPLOYMENT_PACKAGES = {

@@ -62,6 +62,7 @@ function ButtonsControl(props) {
     stepsRenderer.renderSteps(steps, workcellType);
     stepsRenderer.showStepsGuide();
     window.build_string = stepsRenderer.collectCommands(workcellType);
+    showNotification('Steps generated successfully!', 'success');
     
     // Create key on server
     if (window.build_string) {

@@ -17,7 +17,6 @@ function ImageTagOnlySteps(props) {
   var nextStepNum = hasImageTags ? 3 : 2;
   steps.push(stepBuilders.uploadWorkflow(props, nextStepNum));
   steps.push(stepBuilders.launchWorkflow(props, nextStepNum + 1));
-  steps.push(stepBuilders.launchWorkflow(props, nextStepNum + 1));
 
   return steps;
 }

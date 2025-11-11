@@ -1,11 +1,13 @@
 var React = require('react');
-var serviceConstants = require('../utils/serviceConstants');
+var HandleStow = require('../utils/HandleStowServices');
+var HandleBuffer = require('../utils/HandleBufferServices');
+var HandleInduct = require('../utils/HandleInductServices');
 
 function getServicesByType() {
   return {
-    stow: serviceConstants.stowServices,
-    buffer: serviceConstants.bufferCarbonServices.concat(['BufferItemHandling', 'BufferOpcuaAdapter', 'BufferOrchestrator']),
-    induct: ['BaslerManager'].concat(serviceConstants.carbonServices).concat(['GraspPercept', 'InductApplet', 'InfeedControl', 'ItemHandling', 'ItemRouting', 'OpcuaAdapter', 'OperatorUI', 'Orchestrator', 'VOCALService'])
+    stow: HandleStow.getAllServices(),
+    buffer: HandleBuffer.getAllServices(),
+    induct: HandleInduct.getAllServices()
   };
 }
 
@@ -87,7 +89,7 @@ function ImageTagDialog(props) {
           className: 'input-field',
           value: imageTag,
           onChange: function(e) { setImageTag(e.target.value); },
-          placeholder: 'e.g., v1.2.3 or latest'
+          placeholder: 'Paste image tag here'
         })
       ),
       React.createElement(

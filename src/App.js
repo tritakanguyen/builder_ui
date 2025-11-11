@@ -184,51 +184,7 @@ function App() {
     }
   }, [workcellId]);
 
-  function formatTimestamp() {
-    var d = new Date();
-    var month = ('0' + (d.getMonth() + 1)).slice(-2);
-    var day = ('0' + d.getDate()).slice(-2);
-    var hours = ('0' + d.getHours()).slice(-2);
-    var minutes = ('0' + d.getMinutes()).slice(-2);
-    return month + '-' + day + '@' + hours + ':' + minutes;
-  }
 
-  function handleSaveSession() {
-    if (!testTitle.trim()) {
-      showNotification('Test Title is required to save a session.', 'warning');
-      return;
-    }
-    
-    console.log('Saving imageTagInputs:', imageTagInputs);
-    showNotification('Session saved successfully!', 'success');
-    var newSession = {
-      id: Date.now(),
-      name: testTitle,
-      timestamp: formatTimestamp(),
-      testDate: testDate,
-      testTitle: testTitle,
-      workcellId: workcellId,
-      eventId: eventId,
-      workcellType: workcellType,
-      imageTag: imageTag,
-      imageTagValue: imageTagValue,
-      imageTagInputs: imageTagInputs,
-      cherryPick: cherryPick,
-      vsConfigPick: vsConfigPick,
-      vsConfigPickValue: vsConfigPickValue,
-      deployArtifactsPick: deployArtifactsPick,
-      deployArtifactsPickValue: deployArtifactsPickValue,
-      dynamicInputs: dynamicInputs
-    };
-    var updated = [newSession].concat(sessions).slice(0, 10);
-    setSessions(updated);
-    try {
-      localStorage.setItem('builder_sessions', JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save session to localStorage:', e);
-      showNotification('Failed to save session', 'error');
-    }
-  }
 
   function handleLoadSession(idx) {
     var s = sessions[idx];
@@ -381,7 +337,7 @@ function App() {
     !sessionSidebarOpen && React.createElement(
       'button',
       {
-        className: 'md:hidden fixed right-2 top-2 sm:right-3 sm:top-3 z-[1200] bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-cyan-400 rounded-lg w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center shadow-lg shadow-slate-500/50 hover:shadow-cyan-500/70 border-2 border-slate-700 hover:border-cyan-500 transition-all text-xs sm:text-sm',
+        className: 'fixed right-2 top-2 sm:right-3 sm:top-3 z-[1200] bg-gradient-to-br from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-cyan-400 rounded-lg w-7 h-7 sm:w-9 sm:h-9 flex items-center justify-center shadow-lg shadow-slate-500/50 hover:shadow-cyan-500/70 border-2 border-slate-700 hover:border-cyan-500 transition-all text-xs sm:text-sm',
         title: 'Open Sessions',
         onClick: function() { 
           setSessionSidebarOpen(true); 
@@ -509,14 +465,31 @@ function App() {
       }),
       React.createElement(StepsGuide, { activeWorkcellType: workcellType }),
       React.createElement(SessionSidebar, {
-        onSaveSession: handleSaveSession,
         sessions: sessions,
+        setSessions: setSessions,
         onLoadSession: handleLoadSession,
         onDeleteSession: handleDeleteSession,
         isOpen: sessionSidebarOpen,
         onClose: function() { 
           setSessionSidebarOpen(false); 
           setShowSessionReminder(true);
+        },
+        showNotification: showNotification,
+        formData: {
+          testDate: testDate,
+          testTitle: testTitle,
+          workcellId: workcellId,
+          eventId: eventId,
+          workcellType: workcellType,
+          imageTag: imageTag,
+          imageTagValue: imageTagValue,
+          imageTagInputs: imageTagInputs,
+          cherryPick: cherryPick,
+          vsConfigPick: vsConfigPick,
+          vsConfigPickValue: vsConfigPickValue,
+          deployArtifactsPick: deployArtifactsPick,
+          deployArtifactsPickValue: deployArtifactsPickValue,
+          dynamicInputs: dynamicInputs
         }
       })
     )
